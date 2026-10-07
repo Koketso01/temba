@@ -38,9 +38,7 @@ SURVEY = """# TEMBA demo survey: one realisation of 12 galaxies in a small synth
 survey: demo
 workdir: work
 tools:
-  sofia: {sofia}
-  ld_library_path: {ldpath}
-injection:
+{tools}injection:
   sources_per_realisation: 12
   realisations: 1
   stamps: 2
@@ -58,7 +56,7 @@ fields:
 """
 
 
-def write(outdir, seed=1, sofia_exe=None):
+def write(outdir, seed=1, sofia_exe=None, tools=None):
     """Write the demo cube, mask, SoFiA-2 parameters and survey file into outdir."""
     from astropy.io import fits
     out = Path(outdir)
@@ -85,8 +83,13 @@ def write(outdir, seed=1, sofia_exe=None):
     fits.PrimaryHDU(cube, h).writeto(out / "demo_cube.fits", overwrite=True)
     fits.PrimaryHDU(mask, h).writeto(out / "demo_mask.fits", overwrite=True)
     (out / "demo_sofia.par").write_text(PAR)
-    (out / "survey.yaml").write_text(SURVEY.format(sofia=find_sofia_exe(sofia_exe) or "sofia",
-                                                   ldpath=conda_libs() or "null"))
+    import yaml
+    t = dict(tools or {})
+    t["sofia"] = find_sofia_exe(sofia_exe or t.get("sofia")) or t.get("sofia") or "sofia"
+    t.setdefault("ld_library_path", conda_libs())
+    t = {k: v for k, v in t.items() if v}
+    block = "".join("  " + line + "\n" for line in yaml.safe_dump(t, sort_keys=False).splitlines())
+    (out / "survey.yaml").write_text(SURVEY.format(tools=block))
     return out / "survey.yaml"
 
 

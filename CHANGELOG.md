@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5 (2026-10-07)
+
+- `temba check` and `temba run` also look for the BBarolo executable the
+  injector uses (tools.bbarolo, pyBBarolo's own, or BBarolo on PATH).
+- `temba demo --tools-from survey.yaml` reuses the tools of a working survey.
+
 ## 1.0.4 (2026-10-07)
 
 - `temba demo` finds SoFiA-2 (PATH, ~/.temba, ~/SoFiA-2) and the conda

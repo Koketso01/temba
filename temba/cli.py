@@ -268,11 +268,14 @@ def cmd_set(a):
 def cmd_demo(a):
     from . import demo
     branding.banner()
-    survey = demo.write(a.dir, sofia_exe=a.sofia)
+    tools = config.load(a.tools_from)["tools"] if a.tools_from else None
+    survey = demo.write(a.dir, sofia_exe=a.sofia, tools=tools)
     branding.ok(f"demo survey written to {a.dir}/")
-    if not demo.find_sofia_exe(a.sofia):
-        branding.warn("SoFiA-2 not found: give its path with `temba demo --sofia /path/to/sofia`, "
-                      "or install it with `temba install-sofia`")
+    s = config.load(survey)
+    for name, ok, detail in deps.report(s["tools"]):
+        if not ok:
+            branding.warn(f"{name}: {detail}")
+    print("  (`temba demo --tools-from my_survey.yaml` reuses the tools of a survey that already runs)")
     print(f"""
   cd {a.dir}
   temba check survey.yaml      # all ticks?
@@ -367,6 +370,7 @@ def main(argv=None):
     p = sub.add_parser("demo", help="write a tiny synthetic survey to test an installation")
     p.add_argument("dir", nargs="?", default="temba_demo")
     p.add_argument("--sofia", help="path to the SoFiA-2 executable, if it is not found by itself")
+    p.add_argument("--tools-from", help="copy the tools section of a survey file that already works")
     p.set_defaults(func=cmd_demo)
     p = sub.add_parser("selftest", help="run the built-in tests (no SoFiA-2 or 3D-Barolo needed)")
     p.set_defaults(func=cmd_selftest)

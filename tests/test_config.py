@@ -170,3 +170,14 @@ def test_demo_survey_is_valid(tmp_path):
     assert [f["name"] for f in s["fields"]] == ["Demo"]
     assert not [m for lvl, m in config.check(s) if lvl == "error"]
     assert config.total_injections(s, s["fields"][0]) == 12
+
+
+def test_demo_takes_tools_from_a_working_survey(tmp_path):
+    from temba import demo
+    exe = tmp_path / "BBarolo"; exe.write_text("#!/bin/sh\n"); exe.chmod(0o755)
+    p = demo.write(tmp_path / "d", tools={"sofia": "/opt/sofia", "bbarolo": str(exe),
+                                         "ld_library_path": "/opt/lib"})
+    t = config.load(p)["tools"]
+    assert t["bbarolo"] == str(exe) and t["ld_library_path"] == "/opt/lib"
+    from temba import deps
+    assert deps.find_bbarolo(t) == str(exe)

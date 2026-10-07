@@ -61,6 +61,24 @@ def pybbarolo(pythonpath=None):
         return False, str(e)
 
 
+def find_bbarolo(tools):
+    """The BBarolo executable: tools.bbarolo, pyBBarolo's own, or BBarolo on PATH."""
+    given = (tools or {}).get("bbarolo")
+    if given and Path(given).expanduser().is_file():
+        return str(Path(given).expanduser())
+    try:
+        if tools and tools.get("pythonpath") and tools["pythonpath"] not in sys.path:
+            sys.path.insert(0, tools["pythonpath"])
+        import inspect
+        from pyBBarolo.utils import SimulatedGalaxyCube
+        exe = inspect.signature(SimulatedGalaxyCube.run).parameters["exe"].default
+        if exe and Path(exe).is_file():
+            return str(exe)
+    except Exception:
+        pass
+    return shutil.which("BBarolo")
+
+
 def env_with(tools):
     e = os.environ.copy()
     for key, var in (("ld_library_path", "LD_LIBRARY_PATH"), ("pythonpath", "PYTHONPATH")):
@@ -79,6 +97,9 @@ def report(tools):
     ok, detail = pybbarolo(tools.get("pythonpath"))
     rows.append(("pyBBarolo (3D-Barolo)", ok, detail if ok else
                  "not importable: `pip install pyBBarolo`, or set tools.pythonpath"))
+    bb = find_bbarolo(tools)
+    rows.append(("BBarolo executable", bool(bb), bb or
+                 "not found: pip-installed pyBBarolo ships one; otherwise set tools.bbarolo"))
     return rows
 
 
