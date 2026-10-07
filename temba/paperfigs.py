@@ -766,7 +766,7 @@ def fig_flux_recovery(res, outdir):
         ax.axhline(ref, color=GREY, lw=0.6, ls=":")
         ax.set_ylabel(yl); ax.set_xlabel(r"$\log_{10}\,{\rm SNR}_{\rm int}$")
     panel_tag(axes[0], "(a)"); panel_tag(axes[1], "(b)")
-    fig.subplots_adjust(wspace=0.22)
+    fig.subplots_adjust(wspace=0.22 * FONT_SCALE ** 2)
     field_legend(fig, res, ncol=6, y=-0.04)
     return save(fig, outdir, "fig05_flux_recovery")
 
@@ -919,8 +919,8 @@ def fig_radius_freq(rr, outdir):
             i = int(np.argmin(mu))
             fig_radius_freq.dip = (float(mu[i]), float(xc[i]))
         ax.axhline(0, color=GREY, lw=0.6, ls=":")
-    axes[0].set_xlabel("distance from pointing centre [arcmin]")
-    axes[1].set_xlabel("observed frequency [MHz]")
+    axes[0].set_xlabel("distance from centre [arcmin]")
+    axes[1].set_xlabel("frequency [MHz]")
     axes[0].set_ylabel(r"$\Delta P_{\rm det}$")
     lim = 0.05
     for ax in axes:
@@ -937,7 +937,7 @@ def fig_radius_freq(rr, outdir):
     axes[0].text(0.97, 0.05, "black: all fields\nlines: individual fields",
                  transform=axes[0].transAxes, ha="right", va="bottom",
                  fontsize=plt.rcParams["legend.fontsize"], color=GREY)
-    fig.subplots_adjust(wspace=0.05)
+    fig.subplots_adjust(wspace=0.05 + 0.08 * (FONT_SCALE - 1) * 4)
     field_legend(fig, rr, ncol=6, y=-0.05)
     return save(fig, outdir, "fig08_radius_freq")
 
@@ -1313,12 +1313,12 @@ def fig_width_size(res, outdir):
         low = b[:, 0] < 200
         ref = 10 ** np.median((b[:, 1] - 0.5 * np.log10(b[:, 0]))[low if low.any() else slice(None)])
         ax.plot(ww, ref * ww ** 0.5, color="#c1440e", lw=0.9, ls="--",
-                label=r"$\propto W_{50}^{1/2}$ (matched filter)")
+                label=r"$\propto W_{50}^{1/2}$")
         # ALFALFA's 50% limit has this shape (Haynes et al. 2011): W^1/2 below
         # log W50 = 2.5, W^1 above; drawn here with our normalisation
         wb = 10 ** 2.5
         alf = np.where(ww < wb, ref * ww ** 0.5, ref * wb ** 0.5 * (ww / wb))
-        ax.plot(ww, alf, color=GREY, lw=0.9, ls=":", label="ALFALFA shape")
+        ax.plot(ww, alf, color=GREY, lw=0.9, ls=":", label="ALFALFA")
         ax.legend(loc="lower right", fontsize=plt.rcParams["legend.fontsize"] - 0.5)
     ax.set_xscale("log"); ax.set_yscale("log")
     from matplotlib.ticker import FuncFormatter, NullFormatter
@@ -1332,7 +1332,7 @@ def fig_width_size(res, outdir):
     axes[2].yaxis.set_major_locator(FixedLocator([300, 500, 1000, 2000, 3000]))
     for a_, t, x in zip(axes, ("(a)", "(b)", "(c)"), (0.88, 0.88, 0.03)):
         panel_tag(a_, t, x=x)
-    fig.subplots_adjust(wspace=0.35)
+    fig.subplots_adjust(wspace=0.35 * FONT_SCALE ** 2)
     return save(fig, outdir, "fig11_width_size")
 
 
@@ -1487,7 +1487,7 @@ def fig_coverage(res, fields_dir, outdir):
             ("v", "lin1e3", r"$cz_{\rm radio}$ [10$^3$ km s$^{-1}$]"),
             ("snr_ps", "log", r"$\log_{10}\,[S/(\sigma\sqrt{\Delta v\,W_{50}})]$"),
             ("drat", "log", r"$\log_{10}(d_{\rm HI}/\theta_{\rm beam})$"),
-            ("e3", "lin", r"SoFiA $3\sigma$ major axis / $\theta_{\rm beam}$"))
+            ("e3", "lin", r"SoFiA $3\sigma$ size / $\theta_{\rm beam}$"))
     for ax, (k, kind, xl), tg in zip(axes.flat, spec, "abcdef"):
         def tr(a_):
             a_ = np.asarray(a_, float)
@@ -1522,7 +1522,7 @@ def fig_coverage(res, fields_dir, outdir):
     for ax in axes[:, 0]:
         ax.set_ylabel("normalised count")
     hh, ll = axes[0, 0].get_legend_handles_labels()
-    fig.subplots_adjust(wspace=0.10, hspace=0.42, top=0.90)
+    fig.subplots_adjust(wspace=0.10 * FONT_SCALE ** 2, hspace=0.42 * FONT_SCALE, top=0.90)
     fig.legend(hh, ll, loc="lower center", bbox_to_anchor=(0.5, 0.905), ncol=3,
                fontsize=plt.rcParams["legend.fontsize"])
     return save(fig, outdir, "fig13_coverage")
