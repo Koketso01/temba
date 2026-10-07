@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.8 (2026-10-08)
+
+- Figures can be made from any directory: relative paths in field configs
+  are resolved against the campaign folder (the released catalogues and
+  noise maps were silently skipped before).
+- fig01: shows that draws 3D-Barolo cannot model are redrawn and failed
+  builds are dropped.
+- fig10 and fig14: one shared axis label, the S90 / SNR90 value in each
+  panel title, the legend in its own strip.
+- fig04: taller, with more room between the panels.
+
 ## 1.0.7 (2026-10-07)
 
 - Figures: the font-timestamp warnings that matplotlib's PDF backend logs

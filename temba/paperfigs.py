@@ -334,7 +334,7 @@ def fig_pipeline_column(outdir):
              (6, 8, "#E6F2F3", "recovery")]
     bh, gap = 9.0, 3.6
     pitch = bh + gap
-    bx, bw = 11.0, 52.0
+    bx, bw = 9.8, 50.6          # room on the right for the side branches
     legend_h, top = 9.0, 3.0
     H = top + 9 * pitch - gap + 4.0 + legend_h
     fig = plt.figure(figsize=(wd * MM, H * MM))
@@ -372,7 +372,7 @@ def fig_pipeline_column(outdir):
             ax.add_patch(bar)
         ax.text(bx + 4.2, y + bh - 3.0, bold(name), ha="left", va="center", fontsize=pt(7.5),
                 fontweight="bold", color=INK, zorder=5)
-        ax.text(bx + 4.2, y + 2.7, sub, ha="left", va="center", fontsize=pt(6.5),
+        ax.text(bx + 4.2, y + 2.7, sub, ha="left", va="center", fontsize=min(pt(6.5), 7.6),
                 color="#555555", zorder=5)
         boxes.append(b)
 
@@ -388,15 +388,34 @@ def fig_pipeline_column(outdir):
                                  mutation_scale=6, lw=0.9, color=AMBER, zorder=6))
     ax.text(xr + 5.6, ys[3] + 0.5 * bh - 0.5 * pitch, r"iterate to $W_{50}$", rotation=90,
             ha="center", va="center", fontsize=pt(6.0), color="#B07A18")
+    # galaxies 3D-Barolo cannot model never reach it: the population redraws any
+    # draw whose projected velocity gradient exceeds 6 channels per pixel or whose
+    # disc is smaller than 2 kpc or 5 arcsec; builds that still fail are dropped
+    NOTE = "#6b7480"
+    yp = ys[2]
+    ax.add_patch(FancyArrowPatch((xr, yp + 0.22 * bh), (xr, yp + 0.78 * bh),
+                                 connectionstyle="arc3,rad=1.1", arrowstyle="-|>",
+                                 mutation_scale=5, lw=0.8, color=NOTE, zorder=6))
+    ax.text(xr + 5.4, yp + 0.5 * bh, "redraw if\nunmodellable", rotation=90, ha="center",
+            va="center", fontsize=pt(5.6), color=NOTE, style="italic", linespacing=1.05,
+            multialignment="center")
+    yi = ys[5] + 0.5 * bh
+    ax.annotate("", xy=(xr + 2.6, yi), xytext=(xr, yi),
+                arrowprops=dict(arrowstyle="-|>,head_length=0.25,head_width=0.12", lw=0.8,
+                                color=NOTE, shrinkA=0, shrinkB=0), zorder=6)
+    ax.text(xr + 3.0, yi, r"$\times$", ha="left", va="center", fontsize=pt(7.0), color=RED)
+    ax.text(xr + 8.9, yi, "failed builds\ndropped", rotation=90, ha="center", va="center",
+            fontsize=pt(5.6), color=NOTE, style="italic", linespacing=1.05,
+            multialignment="center")
     # the catalogue's own settings go straight to the source finder
-    xg = wd - 6.0 * k
+    xg = wd - 4.6 * k
     dash = (0, (2.2, 1.6))
     y_from, y_to = ys[0] + 0.5 * bh, ys[6] + 0.5 * bh
     ax.plot([xr, xg, xg], [y_from, y_from, y_to], color=GREY, lw=0.8, ls=dash, zorder=2)
     ax.annotate("", xy=(xr, y_to), xytext=(xg, y_to),
                 arrowprops=dict(arrowstyle="-|>,head_length=0.3,head_width=0.15", lw=0.8,
                                 color=GREY, ls=dash, shrinkA=0, shrinkB=0), zorder=2)
-    ax.text(xg + 2.2, 0.5 * (y_from + y_to), "same settings as the catalogue",
+    ax.text(xg + 1.9, 0.5 * (y_from + y_to), "same settings as the catalogue",
             rotation=90, ha="center", va="center", fontsize=pt(6.0), color="#6b7480",
             style="italic")
 
@@ -676,7 +695,7 @@ def fig_thresholds(res, outdir):
 
 
 def fig_noise_config(res, pars, outdir):
-    fig, axes = plt.subplots(1, 2, figsize=(W["full"] * MM, 0.42 * W["full"] * MM))
+    fig, axes = plt.subplots(1, 2, figsize=(W["full"] * MM, 0.47 * W["full"] * MM))
     ax = axes[0]
     sig = {f: np.log10(1e3 * res[f]["sigma_med"]) for f in res}
     for key, filled in (("logS50", True), ("logS90", False)):
@@ -697,9 +716,9 @@ def fig_noise_config(res, pars, outdir):
                 color=GREY, ha="center", va="bottom")
     ax.set_xlabel(r"$\log_{10}(\sigma_{\rm chan}/{\rm mJy\,beam^{-1}})$, field median")
     ax.set_ylabel(r"$\log_{10}(S/{\rm Jy\,km\,s^{-1}})$")
-    ax.text(0.03, 0.86, r"filled: $S_{50}$;  open: $S_{90}$",
+    ax.text(0.97, 0.04, r"filled: $S_{50}$;  open: $S_{90}$",
             transform=ax.transAxes, fontsize=plt.rcParams["legend.fontsize"], color=GREY,
-            va="top")
+            ha="right", va="bottom")
     panel_tag(ax, "(a)")
 
     ax = axes[1]
@@ -724,7 +743,7 @@ def fig_noise_config(res, pars, outdir):
     ax.set_xlabel("reliability.minSNR")
     ax.set_ylabel(r"$\log_{10}\,{\rm SNR}_{50}$")
     panel_tag(ax, "(b)")
-    fig.subplots_adjust(wspace=0.28)
+    fig.subplots_adjust(wspace=0.28 * FONT_SCALE ** 2, top=0.86)
     field_legend(fig, res, ncol=6, y=-0.04, markers=True)
     return save(fig, outdir, "fig04_noise_config")
 
@@ -827,7 +846,7 @@ def geometry(fields_dir, field):
     try:
         import yaml
         from astropy.io import fits
-        cfg = yaml.safe_load(open(Path(fields_dir) / field / "field.yaml"))
+        cfg = field_cfg(fields_dir, field)
         h = fits.getheader(cfg["substrate"])
         return (float(h["CRPIX1"]) - 1.0, float(h["CRPIX2"]) - 1.0,
                 3600.0 * abs(float(h["CDELT1"])))
@@ -1161,12 +1180,28 @@ W_REF = 200.0                                   # km/s, reference linewidth for 
 S_LABEL = r"$\log_{10}(S_{\rm int}/{\rm Jy\,km\,s^{-1}})$"
 
 
+FILE_KEYS = ("cube", "mask", "science_par", "science_catalogue", "rms_cube",
+             "substrate", "noise_map")
+
+
 def field_cfg(fields_dir, f):
+    """A field's config, with relative paths made absolute.
+
+    Campaign configs may give paths relative to the campaign's working folder
+    (the parent of fields/); resolving them here lets the figures be made from
+    any directory.
+    """
     try:
         import yaml
-        return yaml.safe_load(open(Path(fields_dir) / f / "field.yaml")) or {}
+        cfg = yaml.safe_load(open(Path(fields_dir) / f / "field.yaml")) or {}
     except Exception:
         return {}
+    base = Path(fields_dir).resolve().parent
+    for k in FILE_KEYS:
+        v = cfg.get(k)
+        if v and not Path(str(v)).is_absolute():
+            cfg[k] = str(base / str(v))
+    return cfg
 
 
 def cluster_z(fields_dir, f):
@@ -1207,7 +1242,7 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
     fs = sorted(res, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99)
     ncol = 4
     nrow = int(np.ceil(len(fs) / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(W["full"] * MM, 0.25 * W["full"] * MM * nrow),
+    fig, axes = plt.subplots(nrow, ncol, figsize=(W["full"] * MM, (0.27 * W["full"] * nrow + 30 * FONT_SCALE) * MM),
                              sharex=True, sharey=True, squeeze=False)
     xc = 0.5 * (edges[:-1] + edges[1:])
     sym = r"{\rm SNR}" if snr else "S"
@@ -1242,15 +1277,12 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
                 ax.axvline(np.log10(s_point(n, sig, chan_width(res, f))), color=GREY, lw=0.6,
                            ls=(0, (1, 1.5)), zorder=2)
         ax.set_zorder(tw.get_zorder() + 1); ax.patch.set_visible(False)
-        ax.set_title(label(f), fontsize=plt.rcParams["font.size"] - 0.5, pad=2)
-        ax.text(0.97, 0.06, r"$%s_{90}$ = %.*f" % (sym, 1 if snr else 2, 10 ** fit["logS90"]),
-                transform=ax.transAxes, ha="right", va="bottom",
-                fontsize=plt.rcParams["legend.fontsize"] - 0.5)
+        ax.set_title(label(f) + "\n" + r"$%s_{90}$ = %.*f" % (
+                         sym, 1 if snr else 2, 10 ** fit["logS90"]),
+                     fontsize=plt.rcParams["font.size"] - 0.5, pad=2, linespacing=1.15)
         ax.set_ylim(-0.03, 1.05)
     for ax in list(axes.flat)[len(fs):]:
         ax.axis("off")
-    for ax in axes[-1]:
-        ax.set_xlabel(r"$\log_{10}\,{\rm SNR}_{\rm int}$" if snr else S_LABEL)
     for ax in axes[:, 0]:
         ax.set_ylabel("completeness")
     handles = [
@@ -1261,11 +1293,17 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
         Line2D([], [], color=LIGHT, lw=5, label="injected (right axis)")]
     if not snr:
         handles.insert(4, Line2D([], [], color=GREY, lw=0.6, ls=(0, (1, 1.5)),
-                       label=r"SNR$_{\rm int}$ = 1, 3 ($W_{50}$ = 200 km s$^{-1}$, unresolved)"))
+                       label=r"SNR$_{\rm int}$ = 1 and 3 (unresolved)"))
+    H = fig.get_size_inches()[1] * 25.4                     # figure height, mm
     fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.0),
-               ncol=3 if W["full"] >= 170 else 2,
-               fontsize=plt.rcParams["legend.fontsize"])
-    fig.subplots_adjust(wspace=0.08, hspace=0.25, bottom=0.17 if W["full"] >= 170 else 0.22)
+               ncol=3 if W["full"] >= 170 else 2, fontsize=plt.rcParams["legend.fontsize"],
+               columnspacing=1.0, handlelength=1.6)
+    # rows of panels, then the shared axis label, then the legend underneath
+    fig.subplots_adjust(wspace=0.10 * FONT_SCALE, hspace=0.50 * FONT_SCALE,
+                        bottom=(30 * FONT_SCALE) / H, top=1 - 10 * FONT_SCALE / H)
+    fig.supxlabel(r"$\log_{10}\,{\rm SNR}_{\rm int}$" if snr else S_LABEL,
+                  fontsize=plt.rcParams["axes.labelsize"], y=(18.5 * FONT_SCALE) / H,
+                  va="bottom")
     return save(fig, outdir, "fig14_per_field_snr" if snr else "fig10_per_field")
 
 

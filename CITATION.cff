@@ -7,7 +7,7 @@ abstract: >-
   sources removed, and recovering them with the unmodified SoFiA-2
   configuration that produced the catalogue.
 type: software
-version: 1.0.7
+version: 1.0.8
 date-released: 2026-10-07
 license: MIT
 authors:
