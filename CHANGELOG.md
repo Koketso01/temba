@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.3 (2026-10-07)
+
+- `temba demo`: a tiny synthetic survey that tests an installation end to end.
+- `temba selftest` and `temba report` (a text file to send back with feedback);
+  TESTING.md and GitHub issue templates for testers.
+- No BBarolo executable needs configuring: pip-installed pyBBarolo ships one.
+- `temba install-sofia` clones SoFiA-2 from GitLab (its GitHub repository is a pointer).
+- `temba status` shows fields in progress.
+
 ## 1.0.2 (2026-10-07)
 
 - `temba add-field` and `temba set` edit a survey file from the command line,

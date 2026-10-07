@@ -32,7 +32,19 @@ Other routes:
 | pip | `pip install ".[models]"` | needs wcslib, cfitsio and fftw already installed; then `temba install-sofia` or an existing SoFiA-2 |
 | Docker | `docker build -t temba -f docker/Dockerfile .` | everything in one image |
 
-`temba check` reports what is installed and what is missing.
+`temba check` reports what is installed and what is missing. To confirm an
+installation works end to end, run the built-in tests and the demo survey:
+
+```bash
+temba selftest
+temba demo temba_demo && cd temba_demo && temba run survey.yaml && temba status survey.yaml
+```
+
+SoFiA-2 is developed on [GitLab](https://gitlab.com/SoFiA-Admin/SoFiA-2);
+`temba install-sofia` clones and compiles it from there.
+
+Testers: see [TESTING.md](TESTING.md). `temba report` writes a text file with
+everything we need to help.
 
 ## Quick start
 

@@ -301,7 +301,9 @@ def realisation(cfg, root, run_id, force=False, cleanup=False, n=None):
     if not cube.exists() or force:
         run([sys.executable, "-m", "temba.inject",
              "--population", str(pop), "--substrate", cfg["substrate"],
-             "--bb-exe", cfg["tools"]["bbarolo"], "--outdir", str(d / "injection"),
+             *(["--bb-exe", cfg["tools"]["bbarolo"]] if (cfg.get("tools") or {}).get("bbarolo")
+               else []),
+             "--outdir", str(d / "injection"),
              "--model-oversample", inj_cfg.get("model_oversample", 5),
              "--w50-tol", inj_cfg.get("w50_tol", 0.10),
              "--flux-tol", inj_cfg.get("flux_tol", 0.05)],

@@ -161,3 +161,12 @@ def test_catalogue_name_must_match_output_filename(survey, tmp_path):
     raw = yaml.safe_load(survey.read_text()); raw["fields"][0]["catalogue"] = "A_cat.xml"
     survey.write_text(yaml.safe_dump(raw))
     assert any("output.filename" in m for _, m in config.check(config.load(survey)))
+
+
+def test_demo_survey_is_valid(tmp_path):
+    from temba import demo
+    survey_path = demo.write(tmp_path / "d")
+    s = config.load(survey_path)
+    assert [f["name"] for f in s["fields"]] == ["Demo"]
+    assert not [m for lvl, m in config.check(s) if lvl == "error"]
+    assert config.total_injections(s, s["fields"][0]) == 12

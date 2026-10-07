@@ -728,7 +728,16 @@ def main():
         return
 
     if not a.bb_exe:
-        sys.exit("--bb-exe is required unless --dry-model is given.")
+        # pip-installed pyBBarolo ships its own BBarolo executable: use it
+        try:
+            import inspect
+            from pyBBarolo.utils import SimulatedGalaxyCube
+            a.bb_exe = inspect.signature(SimulatedGalaxyCube.run).parameters["exe"].default
+        except Exception:
+            a.bb_exe = None
+        if not a.bb_exe or not Path(a.bb_exe).exists():
+            sys.exit("no BBarolo executable: install pyBBarolo (pip install pyBBarolo) "
+                     "or set tools.bbarolo")
 
     # ---- inject -----------------------------------------------------------
     truth = []

@@ -15,8 +15,8 @@ import sys
 from pathlib import Path
 
 PY_PACKAGES = ("numpy", "scipy", "astropy", "matplotlib", "yaml")
-SOFIA_REPOS = ("https://github.com/SoFiA-Admin/SoFiA-2.git",
-               "https://gitlab.com/SoFiA-Admin/SoFiA-2.git")
+# SoFiA-2 is developed on GitLab; its GitHub repository holds only a pointer there
+SOFIA_REPOS = ("https://gitlab.com/SoFiA-Admin/SoFiA-2.git",)
 
 
 def python_packages():
@@ -91,13 +91,18 @@ def install_sofia(prefix, openmp=True):
     prefix = Path(prefix).expanduser().resolve()
     prefix.mkdir(parents=True, exist_ok=True)
     src = prefix / "SoFiA-2"
-    if not src.exists():
+    if not (src / "compile.sh").exists():
+        if src.exists():
+            import shutil as _sh
+            _sh.rmtree(src)
         for url in SOFIA_REPOS:
             r = subprocess.run(["git", "clone", "--depth", "1", url, str(src)])
-            if r.returncode == 0:
+            if r.returncode == 0 and (src / "compile.sh").exists():
                 break
         else:
-            raise SystemExit("could not clone SoFiA-2 from GitHub or GitLab")
+            raise SystemExit("could not get SoFiA-2 from GitLab "
+                             "(https://gitlab.com/SoFiA-Admin/SoFiA-2); install it by hand "
+                             "and set tools.sofia")
     cmd = ["sh", "compile.sh"] + (["-fopenmp"] if openmp else [])
     r = subprocess.run(cmd, cwd=src)
     exe = src / "sofia"

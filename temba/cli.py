@@ -10,6 +10,9 @@
     temba status survey.yaml          progress per field
     temba analyse survey.yaml         completeness fits, figures, examiner tables
     temba install-sofia [--prefix]    download and compile SoFiA-2
+    temba demo [dir]                  a tiny synthetic survey to test an installation
+    temba selftest                    the built-in tests
+    temba report [survey.yaml]        a text file to send back with feedback
     temba banner                      the TEMBA banner
 
 Every step is resumable: rerunning a command continues where it stopped.
@@ -189,7 +192,8 @@ def cmd_status(a):
             except Exception:
                 pass
         camp = root / "campaign.json"
-        state = "done" if camp.exists() else ("running or stopped" if tabs else "not started")
+        state = "done" if camp.exists() else (
+            "in progress (or stopped)" if (tabs or root.exists()) else "not started")
         if camp.exists():
             c = json.loads(camp.read_text())
             state = f"done ({c.get('completed')}/{c.get('n_realisations')} realisations)"
@@ -251,6 +255,50 @@ def cmd_set(a):
     branding.ok(f"previous version kept as {bak}")
 
 
+def cmd_demo(a):
+    from . import demo
+    branding.banner()
+    survey = demo.write(a.dir)
+    branding.ok(f"demo survey written to {a.dir}/")
+    print(f"""
+  cd {a.dir}
+  temba check survey.yaml      # all ticks?
+  temba run survey.yaml        # one realisation of 12 galaxies, a minute or two
+  temba status survey.yaml     # Demo: 1 realisation, about 12 injected
+  temba analyse survey.yaml    # fits and figures in work/analysis/
+""")
+
+
+def cmd_selftest(a):
+    branding.banner(compact=True)
+    r = subprocess.run([sys.executable, "-m", "temba.tests"])
+    sys.exit(r.returncode)
+
+
+def cmd_report(a):
+    """Everything a tester should email back, in one text file."""
+    import io
+    import platform
+    from contextlib import redirect_stdout
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        print(f"TEMBA {__version__}")
+        print(f"python {sys.version.split()[0]}  {platform.platform()}")
+        tools = config.load(a.config)["tools"] if a.config else {"sofia": "sofia"}
+        for name, ok, detail in deps.report(tools):
+            print(f"  {'ok ' if ok else 'BAD'} {name:24s} {detail}")
+        if a.config:
+            s = config.load(a.config)
+            for lvl, msg in config.check(s):
+                print(f"  {lvl}: {msg}")
+            logs = Path(s["workdir"]) / "logs"
+            for lf in sorted(logs.glob("*.log"))[-4:]:
+                print(f"\n--- last lines of {lf.name}")
+                print("\n".join(lf.read_text(errors="replace").splitlines()[-25:]))
+    Path(a.out).write_text(buf.getvalue())
+    branding.ok(f"wrote {a.out}: please attach it to your email or GitHub issue")
+
+
 def cmd_install_sofia(a):
     branding.banner()
     exe = deps.install_sofia(a.prefix, openmp=not a.no_openmp)
@@ -303,6 +351,14 @@ def main(argv=None):
     p.add_argument("--prefix", default=str(Path.home() / ".temba"))
     p.add_argument("--no-openmp", action="store_true")
     p.set_defaults(func=cmd_install_sofia)
+    p = sub.add_parser("demo", help="write a tiny synthetic survey to test an installation")
+    p.add_argument("dir", nargs="?", default="temba_demo")
+    p.set_defaults(func=cmd_demo)
+    p = sub.add_parser("selftest", help="run the built-in tests (no SoFiA-2 or 3D-Barolo needed)")
+    p.set_defaults(func=cmd_selftest)
+    p = sub.add_parser("report", help="write a text file to send back with a test or a problem")
+    p.add_argument("config", nargs="?"); p.add_argument("--out", default="temba_report.txt")
+    p.set_defaults(func=cmd_report)
     p = sub.add_parser("banner", help="show the TEMBA banner")
     p.set_defaults(func=lambda a: branding.banner())
     a = ap.parse_args(argv)
