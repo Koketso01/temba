@@ -4,6 +4,8 @@
     temba check survey.yaml           dependencies, inputs and settings
     temba prepare survey.yaml         write the per-field campaign configs
     temba import fields/              build a survey file from existing field.yaml files
+    temba add-field survey.yaml ...   add a field without opening an editor
+    temba set survey.yaml k=v ...     change settings, e.g. injection.realisations=4
     temba run survey.yaml             substrates, null runs, injections, SoFiA-2, matching
     temba status survey.yaml          progress per field
     temba analyse survey.yaml         completeness fits, figures, examiner tables
@@ -232,6 +234,23 @@ def cmd_import(a):
     branding.ok(f"{len(sv['fields'])} field(s) -> {a.out}")
 
 
+def cmd_add_field(a):
+    entry = {"name": a.name, "cube": a.cube, "mask": a.mask, "sofia_par": a.sofia_par,
+             "catalogue": a.catalogue, "noise_cube": a.noise_cube,
+             "chan_min": a.chan_min, "chan_max": a.chan_max, "z": a.z}
+    entry = {k: v for k, v in entry.items() if v is not None}
+    bak = config.add_field(a.config, entry)
+    branding.ok(f"added {a.name} to {a.config}" + (f" (previous version: {bak})" if bak else ""))
+    branding.ok(f"now: temba check {a.config}")
+
+
+def cmd_set(a):
+    bak = config.set_values(a.config, a.assignments)
+    for x in a.assignments:
+        branding.ok(f"set {x}")
+    branding.ok(f"previous version kept as {bak}")
+
+
 def cmd_install_sofia(a):
     branding.banner()
     exe = deps.install_sofia(a.prefix, openmp=not a.no_openmp)
@@ -264,6 +283,18 @@ def main(argv=None):
     p.add_argument("config"); p.set_defaults(func=cmd_status)
     p = sub.add_parser("analyse", help="completeness fits and figures")
     p.add_argument("config"); p.set_defaults(func=cmd_analyse)
+    p = sub.add_parser("add-field", help="add a field to a survey file (no editor needed)")
+    p.add_argument("config"); p.add_argument("--name", required=True)
+    p.add_argument("--sofia-par", required=True); p.add_argument("--mask", required=True)
+    p.add_argument("--cube", default="from_par",
+                   help="cube SoFiA-2 searched (default: read from the parameter file)")
+    p.add_argument("--catalogue"); p.add_argument("--noise-cube")
+    p.add_argument("--chan-min", type=int); p.add_argument("--chan-max", type=int)
+    p.add_argument("--z", type=float)
+    p.set_defaults(func=cmd_add_field)
+    p = sub.add_parser("set", help="set values in a survey file, e.g. injection.realisations=4")
+    p.add_argument("config"); p.add_argument("assignments", nargs="+")
+    p.set_defaults(func=cmd_set)
     p = sub.add_parser("import", help="build a survey file from existing field.yaml files")
     p.add_argument("fields_dir"); p.add_argument("--out", default="temba_survey.yaml")
     p.add_argument("--workdir", default=".")

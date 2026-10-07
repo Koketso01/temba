@@ -36,8 +36,8 @@ dev = ["pytest>=7"]
 temba = "temba.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/kvmophahlane/temba"
-Issues = "https://github.com/kvmophahlane/temba/issues"
+Homepage = "https://github.com/koketso01/temba"
+Issues = "https://github.com/koketso01/temba/issues"
 
 [tool.setuptools]
 packages = ["temba"]

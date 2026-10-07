@@ -7,11 +7,11 @@ abstract: >-
   sources removed, and recovering them with the unmodified SoFiA-2
   configuration that produced the catalogue.
 type: software
-version: 1.0.1
+version: 1.0.2
 date-released: 2026-10-07
 license: MIT
 authors:
   - family-names: Mophahlane
     given-names: Koketso Vincent
-repository-code: "https://github.com/kvmophahlane/temba"
+repository-code: "https://github.com/koketso01/temba"
 keywords: [radio astronomy, HI, completeness, injection-recovery, SoFiA-2, 3D-Barolo]

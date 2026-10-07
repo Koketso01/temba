@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 (2026-10-07)
+
+- `temba add-field` and `temba set` edit a survey file from the command line,
+  so no text editor is needed.
+- `temba check` warns when a catalogue does not carry its parameter file's
+  `output.filename`, i.e. when the parameter file may not be the one that made it.
+- Repository moved to github.com/koketso01/temba.
+
 ## 1.0.1 (2026-10-07)
 
 - `temba run` and `temba prepare` stop with a clear message when `--fields`

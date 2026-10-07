@@ -158,6 +158,12 @@ def check(s):
                                         f"and that file could not be read to compare them"))
         if f.get("sofia_par") is None or (f.get("sofia_par") and not Path(f["sofia_par"]).exists()):
             pass                      # reported above as a missing required file
+        if f.get("sofia_par") and Path(f["sofia_par"]).exists() and f.get("catalogue"):
+            stem = read_par(f["sofia_par"]).get("output.filename")
+            if stem and not Path(f["catalogue"]).name.startswith(stem):
+                out.append(("warn", f"{n}: the catalogue ({Path(f['catalogue']).name}) does not carry "
+                                    f"this parameter file's output.filename ({stem}); check that "
+                                    f"this parameter file made this catalogue"))
         if not f.get("catalogue"):
             out.append(("warn", f"{n}: no catalogue; coverage and mass-limit figures will skip it"))
     no_z = [f.get("name", "?") for f in s["fields"] if f.get("z") is None]
@@ -297,3 +303,59 @@ def import_fields(fields_dir, workdir="."):
             "chan_max": inj.get("chan_max"), "z": c.get("z"),
             "mask_is_raw": c.get("mask_is_raw") or None}.items() if v is not None})
     return {"survey": "imported", "workdir": str(workdir), "tools": tools, "fields": fields}
+
+
+def _backup(path):
+    path = Path(path)
+    b = path.with_suffix(path.suffix + ".bak")
+    b.write_text(path.read_text())
+    return b
+
+
+def add_field(path, entry):
+    """Append one field to a survey file without disturbing the rest of it.
+
+    When 'fields:' is the file's last top-level key (as `temba init` and
+    `temba import` write it) the entry is appended as text, so comments survive;
+    otherwise the file is rewritten (a .bak copy is kept).
+    """
+    path = Path(path)
+    raw = yaml.safe_load(path.read_text()) or {}
+    names = [f.get("name") for f in raw.get("fields") or []]
+    if entry["name"] in names:
+        raise SystemExit(f"{entry['name']} is already in {path}")
+    keys = list(raw)
+    if keys and keys[-1] == "fields":
+        text = path.read_text()
+        indent = "  " if any(l.startswith("  - name:") for l in text.splitlines()) else ""
+        block = yaml.safe_dump([entry], sort_keys=False).splitlines()
+        text = text.rstrip("\n") + "\n" + "\n".join(indent + l for l in block) + "\n"
+        path.write_text(text)
+        return None
+    _backup(path)
+    raw.setdefault("fields", []).append(entry)
+    path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    return str(path) + ".bak"
+
+
+def set_values(path, assignments):
+    """Set dotted keys (injection.realisations=4) in a survey file; keeps a .bak copy."""
+    path = Path(path)
+    raw = yaml.safe_load(path.read_text()) or {}
+    for a in assignments:
+        if "=" not in a:
+            raise SystemExit(f"expected key=value, got {a!r}")
+        key, value = a.split("=", 1)
+        node = raw
+        parts = key.strip().split(".")
+        for k in parts[:-1]:
+            node = node.setdefault(k, {})
+            if not isinstance(node, dict):
+                raise SystemExit(f"{key}: {k} is not a section")
+        node[parts[-1]] = yaml.safe_load(value)
+    b = _backup(path)
+    fields = raw.pop("fields", None)          # keep the field list last, where add_field expects it
+    if fields is not None:
+        raw["fields"] = fields
+    path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    return str(b)

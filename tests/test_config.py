@@ -138,3 +138,26 @@ def test_same_data_under_another_path_is_accepted(survey, tmp_path):
     data = fits.getdata(tmp_path / "A_copy.fits"); data[10] += 1.0
     fits.writeto(tmp_path / "A_copy.fits", data, fits.getheader(tmp_path / "A_copy.fits"), overwrite=True)
     assert any(lvl == "error" and "different data" in m for lvl, m in config.check(config.load(survey)))
+
+
+def test_add_field_and_set_without_an_editor(survey, tmp_path):
+    _fake_field(tmp_path, "C")
+    (tmp_path / "C.par").write_text(f"input.data = {tmp_path / 'C.fits'}\noutput.filename = C\n")
+    config.add_field(survey, {"name": "C", "cube": "from_par", "mask": "C_mask.fits",
+                              "sofia_par": "C.par", "z": 0.05})
+    config.set_values(survey, ["injection.realisations=2", "run.null_run=false"])
+    s = config.load(survey)
+    assert [f["name"] for f in s["fields"]] == ["A", "B", "C"]
+    assert s["fields"][2]["cube"] == str(tmp_path / "C.fits")     # from the parameter file
+    assert s["injection"]["realisations"] == 2 and s["run"]["null_run"] is False
+    assert (tmp_path / "survey.yaml.bak").exists()
+    with pytest.raises(SystemExit):
+        config.add_field(survey, {"name": "C", "mask": "x", "sofia_par": "y"})
+
+
+def test_catalogue_name_must_match_output_filename(survey, tmp_path):
+    (tmp_path / "A.par").write_text("output.filename = Other\n")
+    (tmp_path / "A_cat.xml").write_text("<VOTABLE/>")
+    raw = yaml.safe_load(survey.read_text()); raw["fields"][0]["catalogue"] = "A_cat.xml"
+    survey.write_text(yaml.safe_dump(raw))
+    assert any("output.filename" in m for _, m in config.check(config.load(survey)))

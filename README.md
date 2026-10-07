@@ -17,7 +17,7 @@ TEMBA measures the completeness of an H I source catalogue: the probability that
 TEMBA needs Python 3.9 or newer, SoFiA-2 and 3D-Barolo (through its Python interface, pyBBarolo). The installer sets everything up in a conda environment:
 
 ```bash
-git clone https://github.com/kvmophahlane/temba.git
+git clone https://github.com/koketso01/temba.git
 cd temba
 ./install.sh            # conda env "temba": Python packages, wcslib, cfitsio, fftw,
                         # pyBBarolo, SoFiA-2 (compiled into ~/.temba), tests
