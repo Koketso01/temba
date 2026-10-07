@@ -298,7 +298,7 @@ def build(cube_path, mask_path, out_path, dilate_xy=2, dilate_z=2,
     ohdr.tofile(out_path, overwrite=True)
     nbytes = int(np.prod(shape)) * 4
     with open(out_path, "rb+") as fh:
-        fh.seek(len(ohdr.tostring()) + nbytes - 1)
+        fh.seek(len(ohdr.tostring()) + (-(-nbytes // 2880) * 2880) - 1)
         fh.write(b"\0")
 
     with fits.open(cube_path, memmap=True) as ch:

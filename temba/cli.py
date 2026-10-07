@@ -279,8 +279,8 @@ def cmd_demo(a):
     print(f"""
   cd {a.dir}
   temba check survey.yaml      # all ticks?
-  temba run survey.yaml        # one realisation of 12 galaxies, a minute or two
-  temba status survey.yaml     # Demo: 1 realisation, about 12 injected
+  temba run survey.yaml        # two realisations of 40 galaxies, a few minutes
+  temba status survey.yaml     # Demo: 2 realisations, about 80 injected
   temba analyse survey.yaml    # fits and figures in work/analysis/
 """)
 

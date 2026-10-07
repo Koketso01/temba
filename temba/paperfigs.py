@@ -1738,6 +1738,9 @@ def main():
             fields[f] = (t[keep], nr)
             BAND_CUTS[f] = float(mhz)
         res = fit_fields(fields, a.bootstrap)
+        if not res:
+            raise SystemExit("no field has enough injections to fit (at least 60 usable); "
+                             "inject more: injection.total_per_field or injection.realisations")
         pars = {f: par_settings(a.fields, f) for f in res}
         rr = residuals(res, a.fields)
         rows = None

@@ -169,7 +169,7 @@ def test_demo_survey_is_valid(tmp_path):
     s = config.load(survey_path)
     assert [f["name"] for f in s["fields"]] == ["Demo"]
     assert not [m for lvl, m in config.check(s) if lvl == "error"]
-    assert config.total_injections(s, s["fields"][0]) == 12
+    assert config.total_injections(s, s["fields"][0]) == 80
 
 
 def test_demo_takes_tools_from_a_working_survey(tmp_path):

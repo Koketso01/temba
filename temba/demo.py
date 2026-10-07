@@ -2,9 +2,9 @@
 
 ``temba demo <dir>`` writes a 160 x 160 x 96 cube of Gaussian noise with two
 "catalogued" sources, their mask, a SoFiA-2 parameter file and a survey file
-that injects 12 galaxies in one realisation. The whole run takes a minute or
-two, and exercises every step: substrate, population, 3D-Barolo models,
-injection, SoFiA-2, matching and fitting.
+that injects 80 galaxies in two realisations (enough for the completeness fits).
+The run takes a few minutes and exercises every step: substrate, population,
+3D-Barolo models, injection, SoFiA-2, matching, fitting and figures.
 """
 from __future__ import annotations
 
@@ -34,13 +34,13 @@ output.writeCatXML  = true
 output.writeMask    = true
 """
 
-SURVEY = """# TEMBA demo survey: one realisation of 12 galaxies in a small synthetic cube.
+SURVEY = """# TEMBA demo survey: two realisations of 40 galaxies in a small synthetic cube.
 survey: demo
 workdir: work
 tools:
 {tools}injection:
-  sources_per_realisation: 12
-  realisations: 1
+  sources_per_realisation: 40
+  realisations: 2
   stamps: 2
 run:
   null_run: false

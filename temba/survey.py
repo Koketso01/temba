@@ -321,6 +321,9 @@ def main():
         raise SystemExit(f"No recovery tables under {a.runs}/*/run_*/products/")
     use_style()
     res = fit_fields(fields, a.bootstrap)
+    if not res:
+        raise SystemExit("no field has enough injections to fit (at least 60 usable); "
+                         "inject more: injection.total_per_field or injection.realisations")
     pars = {f: par_settings(a.fields, f) for f in res}
     maps = spatial_maps(res)
 

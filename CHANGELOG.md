@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.6 (2026-10-07)
+
+- Substrate files are padded to whole 2880-byte FITS blocks. MGCLS cube sizes
+  are exact multiples, so earlier results are unaffected; other cube shapes
+  gave astropy's "file may have been truncated" warning.
+- The demo injects two realisations of 40 galaxies, enough for the
+  survey-level fits and figures (`temba analyse`).
+- The survey summary, figures and examiner tables stop with a plain message
+  when no field has enough injections, instead of a traceback.
+
 ## 1.0.5 (2026-10-07)
 
 - `temba check` and `temba run` also look for the BBarolo executable the

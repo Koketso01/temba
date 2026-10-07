@@ -21,14 +21,14 @@ SoFiA-2, use `./install.sh --no-sofia` and give its path in the survey file.
 temba selftest
 ```
 
-## 3. The demo survey (a minute or two)
+## 3. The demo survey (a few minutes)
 
 ```bash
 temba demo temba_demo
 cd temba_demo
 temba check survey.yaml
 temba run survey.yaml
-temba status survey.yaml      # Demo: 1 realisation, about 12 injected
+temba status survey.yaml      # Demo: 2 realisations, about 80 injected
 temba analyse survey.yaml     # results in work/analysis/
 ```
 

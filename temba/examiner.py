@@ -141,6 +141,9 @@ def main():
     a = ap.parse_args()
     fields = collect(a.runs)
     res = fit_fields(fields, a.bootstrap)
+    if not res:
+        raise SystemExit("no field has enough injections to fit (at least 60 usable); "
+                         "inject more: injection.total_per_field or injection.realisations")
     design(res)
     plateau(res)
     edge(res)
