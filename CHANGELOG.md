@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.4 (2026-10-07)
+
+- `temba demo` finds SoFiA-2 (PATH, ~/.temba, ~/SoFiA-2) and the conda
+  environment's libraries, and takes `--sofia PATH`.
+- `temba run` stops before starting when SoFiA-2 or pyBBarolo is missing.
+- `temba status` marks a field whose realisations all failed; `temba analyse`
+  says so instead of failing when nothing has finished.
+
 ## 1.0.3 (2026-10-07)
 
 - `temba demo`: a tiny synthetic survey that tests an installation end to end.

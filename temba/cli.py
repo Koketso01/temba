@@ -140,6 +140,11 @@ def cmd_run(a):
     branding.banner(compact=True)
     s = _load(a.config)
     _require_fields(s, a.fields)
+    missing = [(n, d) for n, ok, d in deps.report(s["tools"]) if not ok]
+    if missing and not a.dry_run:
+        for n, d in missing:
+            branding.fail(f"{n}: {d}")
+        raise SystemExit("missing dependencies; see `temba check " + a.config + "`")
     bad = [m for lvl, m in config.check(s) if lvl == "error"
            and (not a.fields or any(m.startswith(n + ":") for n in a.fields))]
     if bad:
@@ -197,6 +202,8 @@ def cmd_status(a):
         if camp.exists():
             c = json.loads(camp.read_text())
             state = f"done ({c.get('completed')}/{c.get('n_realisations')} realisations)"
+            if not c.get("completed"):
+                state = f"FAILED: see logs/campaign_{f['name']}.log and runs/{f['name']}/run_*/logs/"
         print(f"{f['name']:16s} {len(tabs):12d} {n_inj:9d} {n_det:9d}  {state}")
 
 
@@ -208,6 +215,9 @@ def cmd_analyse(a):
     _warn_kept()
     an = s["analysis"]
     runs, fields, out = str(work / "runs"), str(work / "fields"), work / "analysis"
+    if not list(Path(runs).glob("*/run_*/products/recovery.ecsv")):
+        raise SystemExit("no finished realisations yet: check `temba status " + a.config
+                         + "` and the logs in " + str(work / "logs"))
     steps = [
         ("survey summary", [sys.executable, "-m", "temba.survey", "--runs", runs, "--fields", fields,
                             "--outdir", str(out / "survey")]),
@@ -258,8 +268,11 @@ def cmd_set(a):
 def cmd_demo(a):
     from . import demo
     branding.banner()
-    survey = demo.write(a.dir)
+    survey = demo.write(a.dir, sofia_exe=a.sofia)
     branding.ok(f"demo survey written to {a.dir}/")
+    if not demo.find_sofia_exe(a.sofia):
+        branding.warn("SoFiA-2 not found: give its path with `temba demo --sofia /path/to/sofia`, "
+                      "or install it with `temba install-sofia`")
     print(f"""
   cd {a.dir}
   temba check survey.yaml      # all ticks?
@@ -353,6 +366,7 @@ def main(argv=None):
     p.set_defaults(func=cmd_install_sofia)
     p = sub.add_parser("demo", help="write a tiny synthetic survey to test an installation")
     p.add_argument("dir", nargs="?", default="temba_demo")
+    p.add_argument("--sofia", help="path to the SoFiA-2 executable, if it is not found by itself")
     p.set_defaults(func=cmd_demo)
     p = sub.add_parser("selftest", help="run the built-in tests (no SoFiA-2 or 3D-Barolo needed)")
     p.set_defaults(func=cmd_selftest)

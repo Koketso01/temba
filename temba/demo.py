@@ -39,6 +39,7 @@ survey: demo
 workdir: work
 tools:
   sofia: {sofia}
+  ld_library_path: {ldpath}
 injection:
   sources_per_realisation: 12
   realisations: 1
@@ -57,7 +58,7 @@ fields:
 """
 
 
-def write(outdir, seed=1):
+def write(outdir, seed=1, sofia_exe=None):
     """Write the demo cube, mask, SoFiA-2 parameters and survey file into outdir."""
     from astropy.io import fits
     out = Path(outdir)
@@ -84,6 +85,23 @@ def write(outdir, seed=1):
     fits.PrimaryHDU(cube, h).writeto(out / "demo_cube.fits", overwrite=True)
     fits.PrimaryHDU(mask, h).writeto(out / "demo_mask.fits", overwrite=True)
     (out / "demo_sofia.par").write_text(PAR)
-    sofia = shutil.which("sofia") or "sofia"
-    (out / "survey.yaml").write_text(SURVEY.format(sofia=sofia))
+    (out / "survey.yaml").write_text(SURVEY.format(sofia=find_sofia_exe(sofia_exe) or "sofia",
+                                                   ldpath=conda_libs() or "null"))
     return out / "survey.yaml"
+
+
+def find_sofia_exe(given=None):
+    """SoFiA-2: as given, on PATH, or where `temba install-sofia` and common builds put it."""
+    import os
+    for c in (given, shutil.which("sofia"),
+              os.path.expanduser("~/.temba/SoFiA-2/sofia"), os.path.expanduser("~/SoFiA-2/sofia")):
+        if c and Path(c).is_file() and os.access(c, os.X_OK):
+            return str(Path(c).resolve())
+    return None
+
+
+def conda_libs():
+    """The active conda environment's lib/ (where conda-forge puts wcslib for SoFiA-2)."""
+    import os
+    prefix = os.environ.get("CONDA_PREFIX")
+    return str(Path(prefix) / "lib") if prefix and (Path(prefix) / "lib").is_dir() else None

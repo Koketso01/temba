@@ -8,7 +8,7 @@ Start with ``temba init`` (writes a commented parameter file), then
 ``temba check``, ``temba run`` and ``temba analyse``.
 """
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 NAME = "TEMBA"
 EXPANSION = "Three-dimensional Emission Mock-models for Blind-survey Assessments"
 TAGLINE = "with 3D-Barolo and SoFiA-2"
