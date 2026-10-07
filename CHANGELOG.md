@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.7 (2026-10-07)
+
+- Figures: the font-timestamp warnings that matplotlib's PDF backend logs
+  for every embedded Computer Modern font are silenced.
+- Fields without a catalogue are skipped quietly in the coverage and
+  mass-limit figures.
+
 ## 1.0.6 (2026-10-07)
 
 - Substrate files are padded to whole 2880-byte FITS blocks. MGCLS cube sizes

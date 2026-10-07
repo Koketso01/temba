@@ -94,6 +94,14 @@ TIMES = ["TeX Gyre Termes", "Nimbus Roman", "Nimbus Roman No9 L", "Times New Rom
          "Times", "STIXGeneral"]
 
 
+def _quiet_font_warnings():
+    import logging
+    # set on the emitting logger itself: fontTools adjusts its parent loggers' levels
+    for name in ("fontTools", "fontTools.ttLib", "fontTools.ttLib.tables._h_e_a_d",
+                 "fontTools.subset"):
+        logging.getLogger(name).setLevel(logging.ERROR)
+
+
 def use_style(base=None, fonts="auto", journal="mnras"):
     """MNRAS typography.
 
@@ -103,6 +111,7 @@ def use_style(base=None, fonts="auto", journal="mnras"):
     if newtx is not installed), so figure text matches the paper exactly.
     """
     global PCT, USETEX, FONT_SCALE
+    _quiet_font_warnings()
     base = float(base or BASE_PT.get(journal, 9.0))
     FONT_SCALE = base / 8.0
     import shutil
@@ -1351,6 +1360,8 @@ def read_release(fields_dir, f, sigma_ref=None):
     sigma_ref, the median sigma (Jy/beam) the injections saw. That makes the
     result independent of the units the noise map happens to be stored in.
     """
+    if not (field_cfg(fields_dir, f) or {}).get("science_catalogue"):
+        return None                      # no catalogue given for this field: nothing to compare
     try:
         from astropy.table import Table
         from astropy.io import fits
