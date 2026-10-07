@@ -1,0 +1,162 @@
+# =====================================================================
+#  TEMBA survey parameter file for MGCLS-HI (DR1 fields + Chapter 4 clusters)
+#
+#  On jake this list was built from the existing field.yaml files with
+#      temba import fields --out mgcls_hi.yaml --workdir .
+#  and the two Chapter 4 clusters were added by hand at the end. Existing
+#  fields/<name>/field.yaml files are kept as they are (temba never
+#  overwrites them without --overwrite), so hand-tuned settings such as
+#  Abell-4038's fixed reliability kernel and J0314's channel cut stay in force.
+# =====================================================================
+survey: MGCLS-HI
+workdir: .
+tools:
+  sofia: /home/mophahlane/SoFiA-2/sofia
+  bbarolo: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Finished_Completeness/Bbarolo-1.7/BBarolo
+  ld_library_path: /home/mophahlane/anaconda3/envs/sofia2/lib
+  pythonpath: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Finished_Completeness/Bbarolo-1.7
+cosmology:
+  H0: 70.0
+  Om0: 0.3
+injection:
+  sources_per_mvox: 0.806
+  min_sources: 50
+  max_sources: 1200
+  realisations: 4
+  field_dependent_seeds: false
+  design:
+    log_snr:
+    - -0.5
+    - 2.0
+    w50_kms:
+    - 40.0
+    - 600.0
+    d_over_beam:
+    - 0.25
+    - 4.0
+    inclination_deg:
+    - 15.0
+    - 85.0
+    sigma_hi_msun_pc2:
+    - 1.2
+    - 30.0
+run:
+  null_run: false
+  cleanup: true
+  parallel: 2
+analysis:
+  bootstrap: 200
+  journal: mnras
+  fonts: auto
+  min_freq_mhz:
+    J0314.3-4525: 1309
+    J0351.1-8212: 1307
+    J0431.4-6126: 1305
+fields:
+- name: Abell-168
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/Abell-168.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell-168_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-168_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-168_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-168_noise.fits
+  z: 0.05
+- name: Abell-194
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/Abell-194.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell_194_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-194_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-194_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-194_noise.fits
+  z: 0.02
+- name: Abell-3562
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/Abell-3562.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell-3562_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3562_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3562_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3562_noise.fits
+  z: 0.05
+- name: Abell-4038
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/Abell-4038.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell_4038_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-4038_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-4038_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-4038_noise.fits
+  z: 0.03
+- name: Abell-548
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/Abell-548.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell-548_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-548_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-548_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-548_noise.fits
+  z: 0.04
+- name: J0314.3-4525
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0314.3-4525.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0314.3-4525-RXC-J0314.3-4525_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0314.3-4525_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0314.3-4525_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0314.3-4525_noise.fits
+  chan_min: 108
+  chan_max: 476
+  z: 0.07
+- name: J0351.1-8212
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0351.1-8212.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0351.1-8212-RXC-J0351.1-8212_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0351.1-8212_sofia_basic.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0351.1-8212_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0351.1-8212_noise.fits
+  chan_min: 20
+  chan_max: 470
+  z: 0.06
+- name: J0431.4-6126
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0431.4-6126.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0431.4-6126-RXC-J0431.4-6126_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0431.4-6126_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0431.4-6126_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0431.4-6126_noise.fits
+  z: 0.06
+- name: J0540.1-4050
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0540.1-4050.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0540.1-4050-RXC-J0540.1-4050_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0540.1-4050_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0540.1-4050_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0540.1-4050_noise.fits
+  z: 0.04
+- name: J0600.8-5835
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0600.8-5835.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0600.8-5835_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0600.8-5835_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0600.8-5835_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0600.8-5835_noise.fits
+  z: 0.04
+- name: J0757.7-5315
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J0757.7-5315.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J0757.7-5315_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0757.7-5315_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0757.7-5315_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J0757.7-5315_noise.fits
+  z: 0.04
+- name: J2319.2-6750
+  cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Cubes/J2319.2-6750.fits
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/J2319.2-6750_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J2319.2-6750_sofia_basic.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J2319.2-6750_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/J2319.2-6750_noise.fits
+  z: 0.03
+
+# ---- Chapter 4 clusters (added by hand) -------------------------------
+# cube: from_par takes the cube from the parameter file's input.data, i.e.
+# exactly the cube SoFiA-2 searched. Check the other paths with
+#   ls .../HI_MGCLS_tempfolder/{Cluster-Masks,noise_cubes} | grep -i -E "85|3376"
+- name: Abell-85
+  cube: from_par
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell-85_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-85_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-85_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-85_noise.fits
+  z: 0.055            # v_sys = 16520 km/s (Chapter 4)
+- name: Abell-3376
+  cube: from_par
+  mask: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/Cluster-Masks/Abell-3376_mask.fits
+  sofia_par: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3376_sofia.par
+  catalogue: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3376_cat.xml
+  noise_cube: /net/sinatra/vault-janis/mophahlane/HI_MGCLS_tempfolder/noise_cubes/Abell-3376_noise.fits
+  z: 0.046            # v_sys = 13670 km/s (Chapter 4)

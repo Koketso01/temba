@@ -1,0 +1,106 @@
+# =====================================================================
+#  TEMBA survey parameter file
+#  Three-dimensional Emission Mock-models for Blind-survey Assessments
+#
+#  One file describes the whole survey. Relative paths are taken relative
+#  to this file's directory.
+#
+#    temba check  this.yaml      # dependencies and every input file
+#    temba run    this.yaml      # substrates, null runs, injections, SoFiA-2
+#    temba status this.yaml      # progress per field
+#    temba analyse this.yaml     # completeness fits and figures
+# =====================================================================
+
+survey: my-survey                  # a name for this survey
+workdir: temba_work                # substrates, runs, logs and figures go here
+
+# ---------------------------------------------------------------------
+# External programs
+# ---------------------------------------------------------------------
+tools:
+  sofia: sofia                     # SoFiA-2 executable: a path, or a name on PATH
+  bbarolo: null                    # optional: BBarolo executable
+  pythonpath: null                 # optional: BBarolo source tree that provides pyBBarolo
+  ld_library_path: null            # optional: extra libraries SoFiA-2 needs (e.g. libwcs)
+
+cosmology:                         # distances, masses and physical sizes of the models
+  H0: 70.0
+  Om0: 0.3
+
+# ---------------------------------------------------------------------
+# What to inject
+# ---------------------------------------------------------------------
+injection:
+  # How many galaxies per realisation (one injected cube searched once).
+  # Either a fixed count ...
+  sources_per_realisation: 150
+  # ... or a density, in sources per million voxels, which scales the count
+  # with each cube's size and overrides the fixed count. Leave null for a
+  # fixed count.
+  sources_per_mvox: null
+  min_sources: 50                  # bounds on the density-scaled count
+  max_sources: 1200
+
+  # How many in total. Either a total per field, split into realisations ...
+  total_per_field: 600
+  # ... or a fixed number of realisations per field (overrides the total).
+  realisations: null
+
+  seed_base: 42                    # realisation k uses seed 100000*k + seed_base (+ offset)
+  field_dependent_seeds: false     # true: every field gets its own design draws
+  stamps: 6                        # example stamps saved per realisation (figures)
+
+  # The design: a Latin hypercube, uniform in each quantity as noted.
+  design:
+    log_snr: [-0.5, 2.0]           # log10 integrated SNR (uniform in the log)
+    w50_kms: [40.0, 600.0]         # linewidth W50, km/s (uniform in the log)
+    d_over_beam: [0.25, 4.0]       # H I diameter in beams (uniform in the log)
+    inclination_deg: [15.0, 85.0]  # uniform in cos i
+    sigma_hi_msun_pc2: [1.2, 30.0] # accepted mean H I surface densities
+
+  w50_tol: 0.05                    # model W50 must match the design to this fraction
+  flux_tol: 0.05                   # injected flux must match the design to this fraction
+
+# How the catalogued sources are removed to make the signal-free substrate
+substrate:
+  dilate_xy: 2                     # mask growth, pixels
+  dilate_z: 2                      # mask growth, channels
+  seed: 42
+
+# When an injected galaxy counts as recovered
+matching:
+  beam_factor: 2.0                 # within this many beam FWHM on the sky
+  dv_channels: 2.0                 # and within max(this many channels, W20/2) in velocity
+
+# ---------------------------------------------------------------------
+# Running and analysis
+# ---------------------------------------------------------------------
+run:
+  null_run: true                   # search each substrate alone first (false positives)
+  cleanup: true                    # delete large intermediate cubes after each realisation
+  parallel: 1                      # fields processed at the same time
+
+analysis:
+  bootstrap: 200                   # resamplings for threshold uncertainties
+  journal: mnras                   # figure size and fonts: mnras | aa | thesis
+  fonts: auto                      # auto | latex
+  min_freq_mhz: {}                 # band-edge cuts, e.g. {Field-A: 1307.0}
+
+# ---------------------------------------------------------------------
+# Fields. Each needs the cube SoFiA-2 searched, the mask and the parameter
+# file that produced its catalogue; the catalogue, SoFiA-2 noise cube and
+# cluster redshift are optional but used by the figures. Any setting under
+# injection, matching, substrate or tools can be overridden per field.
+# ---------------------------------------------------------------------
+fields:
+  - name: Field-A
+    cube: data/Field-A.fits                # the cube SoFiA-2 searched
+    mask: data/Field-A_mask.fits           # SoFiA-2 mask of the catalogue
+    sofia_par: data/Field-A_sofia.par      # SoFiA-2 parameter file of the catalogue
+    catalogue: data/Field-A_cat.xml        # SoFiA-2 catalogue (VOTable)
+    noise_cube: data/Field-A_noise.fits    # SoFiA-2 noise cube (optional)
+    chan_min: null                         # first searched channel (if SoFiA-2 flagged the band edge)
+    chan_max: null                         # last searched channel
+    z: 0.05                                # cluster redshift (mass limits)
+    # injection:
+    #   sources_per_realisation: 300       # per-field override example

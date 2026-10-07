@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+temba_work/
+*.fits
+*.log
+galaxy_params.txt
+emptycube.fits

@@ -1,0 +1,24 @@
+# conda env create -f environment.yml && conda activate temba
+# Everything TEMBA needs, including the libraries SoFiA-2 and 3D-Barolo build against.
+name: temba
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy
+  - scipy
+  - astropy
+  - matplotlib
+  - pyyaml
+  - pytest
+  - git
+  - make
+  - c-compiler
+  - cxx-compiler
+  - wcslib          # SoFiA-2
+  - cfitsio         # 3D-Barolo
+  - fftw            # 3D-Barolo
+  - pip
+  - pip:
+      - pyBBarolo
+      - -e .

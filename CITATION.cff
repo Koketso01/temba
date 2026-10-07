@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use TEMBA, please cite it as below."
+title: "TEMBA: Three-dimensional Emission Mock-models for Blind-survey Assessments"
+abstract: >-
+  TEMBA measures the completeness of H I source catalogues by injecting
+  3D-Barolo model galaxies into a survey's own cubes, with the catalogued
+  sources removed, and recovering them with the unmodified SoFiA-2
+  configuration that produced the catalogue.
+type: software
+version: 1.0.0
+date-released: 2026-10-07
+license: MIT
+authors:
+  - family-names: Mophahlane
+    given-names: Koketso Vincent
+repository-code: "https://github.com/kvmophahlane/temba"
+keywords: [radio astronomy, HI, completeness, injection-recovery, SoFiA-2, 3D-Barolo]

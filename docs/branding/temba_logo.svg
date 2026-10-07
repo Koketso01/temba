@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E4057"/><stop offset="1" stop-color="#00798C"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="200" rx="18" fill="#ffffff"/>
+  <!-- a double-horned H I profile, the signature of a rotating disc -->
+  <path d="M40 150 L70 150 L84 146 L92 120 L98 62 L106 74 L118 84 L134 84 L146 74 L154 62 L160 120 L168 146 L182 150 L212 150"
+        fill="none" stroke="#EDAE49" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <line x1="40" y1="160" x2="212" y2="160" stroke="#8D96A3" stroke-width="2"/>
+  <text x="236" y="122" font-family="Georgia, 'Times New Roman', serif" font-size="92"
+        font-weight="700" letter-spacing="6" fill="url(#g)">TEMBA</text>
+  <text x="240" y="152" font-family="Georgia, 'Times New Roman', serif" font-size="15.5" fill="#2E4057">
+    Three-dimensional Emission Mock-models for Blind-survey Assessments</text>
+  <text x="240" y="174" font-family="Georgia, 'Times New Roman', serif" font-size="14" fill="#8D96A3"
+        font-style="italic">with 3D-Barolo and SoFiA-2</text>
+</svg>

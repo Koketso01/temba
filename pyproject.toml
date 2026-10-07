@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "temba"
+dynamic = ["version"]
+description = "TEMBA: Three-dimensional Emission Mock-models for Blind-survey Assessments (with 3D-Barolo and SoFiA-2)"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Koketso Vincent Mophahlane"}]
+keywords = ["astronomy", "radio astronomy", "HI", "21cm", "completeness",
+            "injection-recovery", "SoFiA", "3D-Barolo", "selection function"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+]
+dependencies = [
+    "numpy>=1.22",
+    "scipy>=1.8",
+    "astropy>=5.0",
+    "matplotlib>=3.6",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+models = ["pyBBarolo"]
+dev = ["pytest>=7"]
+
+[project.scripts]
+temba = "temba.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/kvmophahlane/temba"
+Issues = "https://github.com/kvmophahlane/temba/issues"
+
+[tool.setuptools]
+packages = ["temba"]
+
+[tool.setuptools.package-data]
+temba = ["data/*.yaml"]
+
+[tool.setuptools.dynamic]
+version = {attr = "temba.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
