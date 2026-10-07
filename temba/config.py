@@ -148,14 +148,47 @@ def check(s):
         if f.get("sofia_par") and Path(f["sofia_par"]).exists() and f.get("cube"):
             searched = read_par(f["sofia_par"]).get("input.data")
             if searched and Path(searched).resolve() != Path(f["cube"]).resolve():
-                out.append(("warn", f"{n}: cube differs from the one SoFiA-2 searched "
-                                    f"(input.data = {searched}); inject into that one, "
-                                    f"or set cube: from_par"))
+                same = same_cube_data(f["cube"], searched)
+                if same is False:
+                    out.append(("error", f"{n}: cube holds different data from the one SoFiA-2 "
+                                         f"searched ({searched}); inject into that one "
+                                         f"(cube: from_par)"))
+                elif same is None:
+                    out.append(("warn", f"{n}: cube is not the file SoFiA-2 searched ({searched}), "
+                                        f"and that file could not be read to compare them"))
+        if f.get("sofia_par") is None or (f.get("sofia_par") and not Path(f["sofia_par"]).exists()):
+            pass                      # reported above as a missing required file
         if not f.get("catalogue"):
             out.append(("warn", f"{n}: no catalogue; coverage and mass-limit figures will skip it"))
-        if f.get("z") is None:
-            out.append(("warn", f"{n}: no redshift 'z'; mass limits at the cluster will skip it"))
+    no_z = [f.get("name", "?") for f in s["fields"] if f.get("z") is None]
+    if no_z:
+        out.append(("warn", f"no redshift 'z' for {', '.join(no_z)}: mass limits at the cluster "
+                            f"use a built-in value where one is known, otherwise are skipped"))
     return out
+
+
+def same_cube_data(a, b, atol=0.0):
+    """True if two cubes hold the same data (shape, beam, and one channel compared),
+    False if they differ, None if either cannot be read."""
+    try:
+        import numpy as np
+        from astropy.io import fits
+        with fits.open(a, memmap=True) as ha, fits.open(b, memmap=True) as hb:
+            da, db = ha[0].data, hb[0].data
+            if da.shape != db.shape:
+                return False
+            for key in ("BMAJ", "BMIN"):
+                if abs(float(ha[0].header.get(key, 0)) - float(hb[0].header.get(key, 0))) > 1e-9:
+                    return False
+            sa, sb = da.squeeze(), db.squeeze()
+            k = sa.shape[0] // 2
+            x, y = np.asarray(sa[k], float), np.asarray(sb[k], float)
+            both = np.isfinite(x) & np.isfinite(y)
+            if (np.isfinite(x) != np.isfinite(y)).mean() > 0.01:
+                return False
+            return bool(np.allclose(x[both], y[both], atol=atol, rtol=1e-6))
+    except Exception:
+        return None
 
 
 def field_config(s, f):

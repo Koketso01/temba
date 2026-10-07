@@ -32,6 +32,16 @@ def _load(path):
         raise SystemExit(f"no such parameter file: {path}  (create one with `temba init`)")
 
 
+def _require_fields(s, names):
+    """Fail loudly when --fields names a field the survey file does not list."""
+    known = [f["name"] for f in s["fields"]]
+    missing = [n for n in (names or []) if n not in known]
+    if missing:
+        raise SystemExit(f"not in {s['_path']}: {', '.join(missing)}\n"
+                         f"add an entry under 'fields:' for each (see `temba init`); "
+                         f"listed now: {', '.join(known)}")
+
+
 def cmd_init(a):
     branding.banner()
     dst = Path(a.path)
@@ -103,6 +113,7 @@ def _warn_kept():
 
 def cmd_prepare(a):
     s = _load(a.config)
+    _require_fields(s, a.fields)
     for name, p in config.write_field_configs(s, a.fields, overwrite=a.overwrite).items():
         branding.ok(f"{name}: {p}")
     _warn_kept()
@@ -123,7 +134,9 @@ def _field_command(s, name, cfg_path):
 def cmd_run(a):
     branding.banner(compact=True)
     s = _load(a.config)
-    bad = [m for lvl, m in config.check(s) if lvl == "error"]
+    _require_fields(s, a.fields)
+    bad = [m for lvl, m in config.check(s) if lvl == "error"
+           and (not a.fields or any(m.startswith(n + ":") for n in a.fields))]
     if bad:
         for m in bad:
             branding.fail(m)

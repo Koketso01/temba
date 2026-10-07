@@ -94,9 +94,11 @@ def test_cli_init_check_and_dry_run(survey, tmp_path):
 
 
 def test_cube_from_par_and_provenance_warning(survey, tmp_path):
+    data = fits.getdata(tmp_path / "B.fits"); data[10] += 1.0
+    fits.writeto(tmp_path / "B.fits", data, fits.getheader(tmp_path / "B.fits"), overwrite=True)
     (tmp_path / "A.par").write_text(f"input.data = {tmp_path / 'B.fits'}\n")
     s = config.load(survey)
-    assert any("differs from the one SoFiA-2 searched" in m for _, m in config.check(s))
+    assert any("different data from the one SoFiA-2 searched" in m for _, m in config.check(s))
     raw = yaml.safe_load(survey.read_text())
     raw["fields"][0]["cube"] = "from_par"
     survey.write_text(yaml.safe_dump(raw))
@@ -119,3 +121,20 @@ def test_existing_field_yaml_is_kept(survey, tmp_path):
     config.write_field_configs(s)
     assert "hand-edited" in p.read_text()
     assert "A" in config.write_field_configs.kept_different
+
+
+def test_unknown_field_is_an_error(survey, tmp_path):
+    r = subprocess.run([sys.executable, "-m", "temba", "run", str(survey), "--fields", "Nope",
+                        "--dry-run"], cwd=tmp_path, capture_output=True, text=True)
+    assert r.returncode != 0 and "not in" in (r.stdout + r.stderr)
+
+
+def test_same_data_under_another_path_is_accepted(survey, tmp_path):
+    import shutil
+    shutil.copy(tmp_path / "A.fits", tmp_path / "A_copy.fits")
+    (tmp_path / "A.par").write_text(f"input.data = {tmp_path / 'A_copy.fits'}\n")
+    s = config.load(survey)
+    assert not [m for _, m in config.check(s) if m.startswith("A:") and "searched" in m]
+    data = fits.getdata(tmp_path / "A_copy.fits"); data[10] += 1.0
+    fits.writeto(tmp_path / "A_copy.fits", data, fits.getheader(tmp_path / "A_copy.fits"), overwrite=True)
+    assert any(lvl == "error" and "different data" in m for lvl, m in config.check(config.load(survey)))

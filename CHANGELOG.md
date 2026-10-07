@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 (2026-10-07)
+
+- `temba run` and `temba prepare` stop with a clear message when `--fields`
+  names a field the survey file does not list (it used to finish silently).
+- `temba check` compares the data, not just the path, of the cube against the
+  one SoFiA-2 searched: a copy is accepted, different data is an error.
+- Missing redshifts are reported in one line.
+
 ## 1.0.0 (2026-10-07)
 
 First public version, as used for the MGCLS-HI completeness analysis.
