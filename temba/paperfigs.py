@@ -711,7 +711,8 @@ def fig_completeness(res, outdir, bins=9):
 
 
 def fig_thresholds(res, outdir):
-    fs = order(res)
+    # the one figure ordered by result rather than by name: increasing S50, top to bottom
+    fs = sorted(res, key=lambda f: res[f]["fit_flux"]["logS50"])
     fig, axes = plt.subplots(1, 2, figsize=(W["full"] * MM, 0.34 * W["full"] * MM),
                              sharey=True)
     y = np.arange(len(fs))[::-1]

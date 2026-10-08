@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.12 (2026-10-08)
+
+- fig03 (thresholds) is ordered by increasing S50, lowest at the top; every
+  other figure and table keeps the alphabetical field order.
+
 ## 1.0.11 (2026-10-08)
 
 - fig09: the pair of colour bars is centred under the figure, closer to the
