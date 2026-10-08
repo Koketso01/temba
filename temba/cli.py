@@ -184,7 +184,7 @@ def cmd_status(a):
     s = _load(a.config)
     runs = Path(s["workdir"]) / "runs"
     print(f"{'field':16s} {'realisations':>12s} {'injected':>9s} {'detected':>9s}  campaign")
-    for f in s["fields"]:
+    for f in sorted(s["fields"], key=lambda f: config.field_key(f["name"])):
         root = runs / f["name"]
         tabs = sorted(root.glob("run_*/products/recovery.ecsv"))
         n_inj = n_det = 0

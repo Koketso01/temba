@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.9 (2026-10-08)
+
+- One field order everywhere (figures, tables, survey summary, examiner
+  tables, `temba status`, `temba import`): alphabetical, with numbers compared
+  as numbers (Abell 85 before Abell 168). Colours and markers stay attached to
+  each field.
+- Grids of per-field panels (fig07, fig10, fig14) centre a short last row;
+  fig07 has its own colour-bar axis.
+- fig01 wording: precise technical labels; the resampling condition is given
+  as G > 6 or d < d_min (velocity gradient and size floor).
+
 ## 1.0.8 (2026-10-08)
 
 - Figures can be made from any directory: relative paths in field configs

@@ -31,6 +31,8 @@ import re
 from pathlib import Path
 
 import numpy as np
+
+from .config import field_key
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -72,7 +74,7 @@ def col(t, name):
 def fit_fields(fields, n_boot, min_sources=60):
     """Flux and SNR logistic fits per field."""
     res = {}
-    for f, (t, nr) in sorted(fields.items()):
+    for f, (t, nr) in sorted(fields.items(), key=lambda kv: field_key(kv[0])):
         det = np.asarray(t["detected"], bool)
         snr, flux = col(t, "snr_design"), col(t, "Fint_injected_Jykms")
         g = np.isfinite(snr) & (snr > 0) & np.isfinite(flux) & (flux > 0)
@@ -88,7 +90,7 @@ def fit_fields(fields, n_boot, min_sources=60):
 
 
 def ordered(res):
-    return sorted(res, key=lambda f: res[f]["fit_flux"]["logS50"])
+    return sorted(res, key=field_key)
 
 
 # ---------------------------------------------------------------------------

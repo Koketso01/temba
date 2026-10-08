@@ -21,6 +21,8 @@ Prints three tables:
 """
 import argparse
 import numpy as np
+
+from .config import field_key
 from scipy.optimize import minimize
 
 from .compare import collect
@@ -41,7 +43,7 @@ def plateau(res):
     print("PLATEAU  three-parameter logistic in log SNR (A = asymptote)")
     print("  %-14s %6s %8s %9s   %-26s %s" % ("field", "A", "+-", "dlnL", "detected at SNR>30",
                                             "missed at SNR>30: median MHz, share < 1310 MHz"))
-    for f in sorted(res):
+    for f in sorted(res, key=field_key):
         x, d = res[f]["logsnr"], res[f]["det"]
         fs = res[f]["fit_snr"]
         p2 = np.array([1.0, fs["x0"], np.log(fs["k"])])
@@ -71,7 +73,7 @@ def chance(res):
     print("CHANCE  probability that an unrelated catalogue source falls inside a matching gate")
     print("  %-14s %8s %9s %11s %12s %12s" % ("field", "N_cat", "gate [']", "gate [km/s]",
                                              "P per source", "spurious/real"))
-    for f in sorted(res):
+    for f in sorted(res, key=field_key):
         t, d = res[f]["t"], res[f]["det"]
         nreal = max(res[f]["n_real"], 1)
         ncat = d.sum() / nreal                      # detections per injected cube
@@ -117,7 +119,7 @@ def edge(res, width=4.0, span=36.0):
     """Detection against the SNR expectation in narrow bins at the low-frequency edge."""
     from .selection import logistic
     print("EDGE  detected - P(SNR) in %.0f MHz bins from each field's lowest injected frequency" % width)
-    for f in sorted(res):
+    for f in sorted(res, key=field_key):
         d, fit = res[f], res[f]["fit_snr"]
         fq = F0_MHZ * (1 - col(d["t"], "vsys_kms") / C_KMS)
         r = d["det"].astype(float) - logistic(d["logsnr"], fit["x0"], fit["k"])

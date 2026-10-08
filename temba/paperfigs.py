@@ -30,6 +30,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import re
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -184,6 +185,46 @@ def bold(s):
     return r"\textbf{%s}" % s if USETEX else s
 
 
+from .config import field_key  # noqa: E402  (one display order everywhere)
+
+
+def ordered(fields):
+    """Fields in the display order used by every figure and table."""
+    return sorted(fields, key=field_key)
+
+
+def centred_axes(fig, n, ncol, sharex=True, sharey=True, **gs_kw):
+    """n panels in rows of ncol, with a short last row centred under the others.
+
+    Returns the axes and, for each, whether it is first or last in its row and
+    whether it shows x tick labels (it does when nothing sits directly below it).
+    """
+    nrow = int(np.ceil(n / ncol))
+    gs = fig.add_gridspec(nrow, 2 * ncol, **gs_kw)
+    axes, first, last, span = [], [], [], []
+    ref = None
+    for i in range(n):
+        r, c = divmod(i, ncol)
+        in_row = ncol if r < nrow - 1 else n - ncol * (nrow - 1)
+        c0 = (ncol - in_row) + 2 * c
+        ax = fig.add_subplot(gs[r, c0:c0 + 2], sharex=ref if sharex else None,
+                             sharey=ref if sharey else None)
+        ref = ref or ax
+        axes.append(ax); first.append(c == 0); last.append(c == in_row - 1)
+        span.append((r, c0, c0 + 2))
+    below = []
+    for (r, a, b) in span:
+        covered = any(r2 == r + 1 and a2 < b and b2 > a for (r2, a2, b2) in span)
+        below.append(not covered)
+    for ax, show in zip(axes, below):
+        if sharex and not show:
+            ax.tick_params(labelbottom=False)
+    for ax, f in zip(axes, first):
+        if sharey and not f:
+            ax.tick_params(labelleft=False)
+    return axes, first, last, below, nrow
+
+
 def fstyle(field):
     i = FIELD_ORDER.index(field) if field in FIELD_ORDER else \
         len(FIELD_ORDER) + abs(hash(field)) % 7
@@ -202,8 +243,7 @@ def field_legend(fig, fields, ncol=None, y=-0.02, markers=False, both=False):
     # callers ask for 6 columns at journal width; narrower pages get fewer
     ncol = min(ncol or 6, max(3, int(W["full"] / (29.0 * FONT_SCALE))))
     h = []
-    for f in sorted(fields, key=lambda f: FIELD_ORDER.index(f)
-                    if f in FIELD_ORDER else 99):
+    for f in ordered(fields):
         s = fstyle(f)
         h.append(Line2D([], [], color=s["color"], ls="" if markers and not both else s["ls"],
                         marker=s["marker"] if (markers or both) else None, ms=3.8,
@@ -320,17 +360,17 @@ def fig_pipeline_column(outdir):
     from matplotlib.patches import Rectangle, FancyArrowPatch
     wd = W["col"]
     NAVY, RED, TEAL, AMBER = "#2E4057", "#D1495B", "#00798C", "#EDAE49"
-    steps = [("data", "Science data", "cube, source mask, settings"),
-             ("temba", "Substrate", "sources removed, noise kept"),
-             ("temba", "Population", r"Latin hypercube in SNR, $W_{50}$, $d/\theta$, $i$"),
+    steps = [("data", "Input data", "cube, SoFiA-2 mask and parameters"),
+             ("temba", "Substrate", "sources masked and refilled with noise"),
+             ("temba", "Population", r"Latin hypercube in SNR, $W_{50}$, $d_{\rm HI}/\theta$, $i$"),
              ("temba", "Disc model", "exponential disc, arctan rotation curve"),
-             ("bbarolo", "Model cube", "tilted rings, beam-convolved"),
-             ("temba", "Inject", r"scale to $F_{\rm int}$, add, verify"),
-             ("sofia", "Source finding", "the catalogue" + APOS + "s own settings"),
-             ("temba", "Match", "capture and fidelity"),
-             ("temba", "Completeness", r"$C(S)$ and $C$(SNR) per field")]
+             ("bbarolo", "Model cube", "tilted-ring model, beam-convolved"),
+             ("temba", "Injection", "flux scaling, addition, verification"),
+             ("sofia", "Source finding", "catalogue SoFiA-2 parameters"),
+             ("temba", "Cross-matching", "capture and flux fidelity"),
+             ("temba", "Completeness", r"$C(S)$ and $C({\rm SNR})$ for each field")]
     ring = dict(data=GREY, temba=NAVY, bbarolo=RED, sofia=TEAL)
-    bands = [(0, 1, "#EEF1F5", "signal-free sky"), (2, 5, "#FBF0EC", "mock galaxies"),
+    bands = [(0, 1, "#EEF1F5", "source-free cube"), (2, 5, "#FBF0EC", "model galaxies"),
              (6, 8, "#E6F2F3", "recovery")]
     bh, gap = 9.0, 3.6
     pitch = bh + gap
@@ -386,7 +426,7 @@ def fig_pipeline_column(outdir):
     ax.add_patch(FancyArrowPatch((xr, ys[4] + 0.5 * bh), (xr, ys[3] + 0.5 * bh),
                                  connectionstyle="arc3,rad=0.55", arrowstyle="-|>",
                                  mutation_scale=6, lw=0.9, color=AMBER, zorder=6))
-    ax.text(xr + 5.6, ys[3] + 0.5 * bh - 0.5 * pitch, r"iterate to $W_{50}$", rotation=90,
+    ax.text(xr + 5.6, ys[3] + 0.5 * bh - 0.5 * pitch, r"iterated to $W_{50}$", rotation=90,
             ha="center", va="center", fontsize=pt(6.0), color="#B07A18")
     # galaxies 3D-Barolo cannot model never reach it: the population redraws any
     # draw whose projected velocity gradient exceeds 6 channels per pixel or whose
@@ -396,7 +436,8 @@ def fig_pipeline_column(outdir):
     ax.add_patch(FancyArrowPatch((xr, yp + 0.22 * bh), (xr, yp + 0.78 * bh),
                                  connectionstyle="arc3,rad=1.1", arrowstyle="-|>",
                                  mutation_scale=5, lw=0.8, color=NOTE, zorder=6))
-    ax.text(xr + 5.4, yp + 0.5 * bh, "redraw if\nunmodellable", rotation=90, ha="center",
+    ax.text(xr + 6.4, yp + 0.5 * bh, "resampled\n" + r"if $G>6$" + "\n" + r"or $d<d_{\rm min}$",
+            rotation=90, ha="center",
             va="center", fontsize=pt(5.6), color=NOTE, style="italic", linespacing=1.05,
             multialignment="center")
     yi = ys[5] + 0.5 * bh
@@ -404,7 +445,7 @@ def fig_pipeline_column(outdir):
                 arrowprops=dict(arrowstyle="-|>,head_length=0.25,head_width=0.12", lw=0.8,
                                 color=NOTE, shrinkA=0, shrinkB=0), zorder=6)
     ax.text(xr + 3.0, yi, r"$\times$", ha="left", va="center", fontsize=pt(7.0), color=RED)
-    ax.text(xr + 8.9, yi, "failed builds\ndropped", rotation=90, ha="center", va="center",
+    ax.text(xr + 8.9, yi, "failed models\nexcluded", rotation=90, ha="center", va="center",
             fontsize=pt(5.6), color=NOTE, style="italic", linespacing=1.05,
             multialignment="center")
     # the catalogue's own settings go straight to the source finder
@@ -415,14 +456,14 @@ def fig_pipeline_column(outdir):
     ax.annotate("", xy=(xr, y_to), xytext=(xg, y_to),
                 arrowprops=dict(arrowstyle="-|>,head_length=0.3,head_width=0.15", lw=0.8,
                                 color=GREY, ls=dash, shrinkA=0, shrinkB=0), zorder=2)
-    ax.text(xg + 1.9, 0.5 * (y_from + y_to), "same settings as the catalogue",
+    ax.text(xg + 1.9, 0.5 * (y_from + y_to), "identical SoFiA-2 parameters",
             rotation=90, ha="center", va="center", fontsize=pt(6.0), color="#6b7480",
             style="italic")
 
     # legend: edge colours
     lx, ly = 3.0 * k, 2.6
     for name, col_, dashed in (("TEMBA", NAVY, False), ("3D-Barolo", RED, False),
-                               ("SoFiA-2", TEAL, False), ("input", GREY, True)):
+                               ("SoFiA-2", TEAL, False), ("input data", GREY, True)):
         b = FancyBboxPatch((lx, ly), 5.0, 3.2, boxstyle="round,pad=0,rounding_size=0.7",
                            fc="white", ec=col_, lw=0.7, ls="--" if dashed else "-")
         ax.add_patch(b)
@@ -631,7 +672,7 @@ def fig_pipeline_flow(outdir):
 # ---------------------------------------------------------------------------
 
 def order(res):
-    return sorted(res, key=lambda f: res[f]["fit_flux"]["logS50"])
+    return ordered(res)
 
 
 def fig_completeness(res, outdir, bins=9):
@@ -886,15 +927,15 @@ def binned(v, r, p, edges, min_n=25):
 
 
 def fig_position_maps(rr, outdir, nb=8, min_n=12, vlim=0.2):
-    fs = sorted(rr, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99)
+    fs = ordered(rr)
     R = max(np.nanpercentile(rr[f]["r"], 99.5) for f in fs)
     edges = np.linspace(-R, R, nb + 1)
     ncol = 4
     nrow = int(np.ceil(len(fs) / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(W["full"] * MM, 0.215 * W["full"] * MM * nrow),
-                             squeeze=False, sharex=True, sharey=True)
+    fig = plt.figure(figsize=(W["full"] * MM, 0.215 * W["full"] * MM * nrow))
+    axes, first, last, below, _ = centred_axes(fig, len(fs), ncol, wspace=0.12, hspace=0.32)
     im = None
-    for ax, f in zip(axes.flat, fs):
+    for ax, f in zip(axes, fs):
         d = rr[f]
         m = np.full((nb, nb), np.nan); z = np.full((nb, nb), np.nan)
         ix = np.clip(np.digitize(d["dx"], edges) - 1, 0, nb - 1)
@@ -908,19 +949,22 @@ def fig_position_maps(rr, outdir, nb=8, min_n=12, vlim=0.2):
         ok = np.isfinite(z)
         im = ax.imshow(m, origin="lower", extent=[-R, R, -R, R], cmap="RdBu_r",
                        vmin=-vlim, vmax=vlim, interpolation="nearest")
-        ax.set_title(label(f), fontsize=plt.rcParams["font.size"] - 0.5, pad=2)
+        ax.set_title(label(f), fontsize=min(plt.rcParams["font.size"] - 0.5, pt(8.0)), pad=2)
         ax.text(0.03, 0.97, r"$\chi^2_\nu$ %.2f" % (np.sum(z[ok] ** 2) / max(ok.sum(), 1)),
                 transform=ax.transAxes, ha="left", va="top",
                 fontsize=plt.rcParams["legend.fontsize"] - 0.5, color=INK)
         ax.set_aspect("equal")
         ax.minorticks_off()
-    for ax in list(axes.flat)[len(fs):]:
-        ax.axis("off")
-    for ax in axes[-1]:
-        ax.set_xlabel(r"$\Delta x$ [arcmin]")
-    for ax in axes[:, 0]:
-        ax.set_ylabel(r"$\Delta y$ [arcmin]")
-    cb = fig.colorbar(im, ax=axes, shrink=0.75, pad=0.01, aspect=30)
+    for ax, b_ in zip(axes, below):
+        if b_:
+            ax.set_xlabel(r"$\Delta x$ [arcmin]")
+    for ax, f0 in zip(axes, first):
+        if f0:
+            ax.set_ylabel(r"$\Delta y$ [arcmin]")
+    # a colour bar of its own, right of the grid, so it never covers a panel
+    fig.subplots_adjust(left=0.10, right=0.86)
+    cax = fig.add_axes([0.885, 0.18, 0.022, 0.64])
+    cb = fig.colorbar(im, cax=cax)
     cb.set_label(r"$\Delta P_{\rm det}$ = detected $-$ $P_{\rm det}$(SNR)")
     return save(fig, outdir, "fig07_position_maps")
 
@@ -934,7 +978,7 @@ def fig_radius_freq(rr, outdir):
         allp = np.concatenate([rr[f]["p"] for f in rr])
         g = np.isfinite(allv)
         edges = np.linspace(np.nanmin(allv[g]), np.nanmax(allv[g]), edges_n + 1)
-        for f in sorted(rr):
+        for f in ordered(rr):
             st = fstyle(f)
             xc, mu, er = binned(rr[f][key], rr[f]["res"], rr[f]["p"],
                                 np.linspace(np.nanmin(rr[f][key]), np.nanmax(rr[f][key]), 7),
@@ -1239,14 +1283,14 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
     if edges is None:
         edges = (np.arange(-0.5, 2.0 + 1e-9, 0.125) if snr
                  else np.arange(-2.0, 1.2 + 1e-9, 0.2))
-    fs = sorted(res, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99)
+    fs = ordered(res)
     ncol = 4
     nrow = int(np.ceil(len(fs) / ncol))
-    fig, axes = plt.subplots(nrow, ncol, figsize=(W["full"] * MM, (0.27 * W["full"] * nrow + 30 * FONT_SCALE) * MM),
-                             sharex=True, sharey=True, squeeze=False)
+    fig = plt.figure(figsize=(W["full"] * MM, (0.27 * W["full"] * nrow + 30 * FONT_SCALE) * MM))
+    axes, first, last, below, _ = centred_axes(fig, len(fs), ncol)
     xc = 0.5 * (edges[:-1] + edges[1:])
     sym = r"{\rm SNR}" if snr else "S"
-    for ax, f in zip(axes.flat, fs):
+    for k, (ax, f) in enumerate(zip(axes, fs)):
         d, st = res[f], fstyle(f)
         fit = d["fit_snr"] if snr else d["fit_flux"]
         x, det = (d["logsnr"] if snr else d["logflux"]), d["det"]
@@ -1259,7 +1303,7 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
         tw.set_ylim(0, 2.4 * max(n_i.max(), 1))
         tw.tick_params(axis="y", labelsize=pt(6), colors=GREY, length=2)
         tw.minorticks_off()
-        if ax not in axes[:, -1]:
+        if not last[k]:
             tw.set_yticklabels([])
         ok = n_i > 0
         p, lo, hi = wilson(n_r[ok], n_i[ok])
@@ -1281,10 +1325,9 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
                          sym, 1 if snr else 2, 10 ** fit["logS90"]),
                      fontsize=plt.rcParams["font.size"] - 0.5, pad=2, linespacing=1.15)
         ax.set_ylim(-0.03, 1.05)
-    for ax in list(axes.flat)[len(fs):]:
-        ax.axis("off")
-    for ax in axes[:, 0]:
-        ax.set_ylabel("completeness")
+    for ax, f0 in zip(axes, first):
+        if f0:
+            ax.set_ylabel("completeness")
     handles = [
         Line2D([], [], marker="o", ls="", color=INK, ms=3, label="recovered / injected (68" + PCT + " Wilson)"),
         Line2D([], [], color=GREY, lw=1.0, label="logistic fit (unbinned)"),
@@ -1299,7 +1342,7 @@ def fig_per_field(res, outdir, axis="flux", edges=None):
                ncol=3 if W["full"] >= 170 else 2, fontsize=plt.rcParams["legend.fontsize"],
                columnspacing=1.0, handlelength=1.6)
     # rows of panels, then the shared axis label, then the legend underneath
-    fig.subplots_adjust(wspace=0.10 * FONT_SCALE, hspace=0.50 * FONT_SCALE,
+    fig.subplots_adjust(wspace=0.22 * FONT_SCALE, hspace=0.50 * FONT_SCALE,
                         bottom=(30 * FONT_SCALE) / H, top=1 - 10 * FONT_SCALE / H)
     fig.supxlabel(r"$\log_{10}\,{\rm SNR}_{\rm int}$" if snr else S_LABEL,
                   fontsize=plt.rcParams["axes.labelsize"], y=(18.5 * FONT_SCALE) / H,
@@ -1468,13 +1511,13 @@ def fig_mass_limits(res, fields_dir, outdir):
     fig, ax = plt.subplots(figsize=(W["col"] * MM, 0.85 * W["col"] * MM))
     zz = np.linspace(0.003, 0.08, 200)
     dl = lum_dist(zz)
-    for f in sorted(res, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99):
+    for f in ordered(res):
         rel = read_release(fields_dir, f, res[f]["sigma_med"])
         if rel is not None:
             g = np.isfinite(rel["M"]) & (rel["M"] > 0)
             ax.plot(lum_dist(rel["z"][g]), np.log10(rel["M"][g]), ".", ms=1.6, color=LIGHT,
                     zorder=0, rasterized=True)
-    for f in sorted(res, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99):
+    for f in ordered(res):
         st, d = fstyle(f), res[f]
         s90 = s_point(10 ** d["fit_snr"]["logS90"], d["sigma_med"], chan_width(res, f))
         ax.plot(dl, np.log10(2.356e5 * dl ** 2 * s90), color=st["color"], ls=st["ls"], lw=0.8)
@@ -1493,7 +1536,7 @@ def fig_mass_limits(res, fields_dir, outdir):
             fontsize=plt.rcParams["legend.fontsize"] - 0.5, color=GREY)
     h = [Line2D([], [], color=fstyle(f)["color"], ls=fstyle(f)["ls"], lw=0.8,
                 marker=fstyle(f)["marker"], ms=3.2, label=label(f))
-         for f in sorted(res, key=lambda f: FIELD_ORDER.index(f) if f in FIELD_ORDER else 99)]
+         for f in ordered(res)]
     fig.legend(handles=h, loc="upper center", bbox_to_anchor=(0.5, 0.0), ncol=3,
                fontsize=plt.rcParams["legend.fontsize"] - 0.5, handlelength=2.4)
     return save(fig, outdir, "fig12_mass_limits")
@@ -1580,7 +1623,7 @@ def fig_coverage(res, fields_dir, outdir):
 def write_tables(outdir, res, fields_dir):
     """Per-field limits: flux and SNR thresholds, noise, and HI mass limits."""
     rows = []
-    for f in sorted(res, key=lambda f: res[f]["fit_flux"]["logS50"]):
+    for f in ordered(res):
         d = res[f]; ff, fs_ = d["fit_flux"], d["fit_snr"]
         dv = chan_width(res, f); zc = cluster_z(fields_dir, f)
         dc = lum_dist(zc) if np.isfinite(zc) else np.nan

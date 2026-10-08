@@ -12,6 +12,7 @@ Relative paths are taken relative to the parameter file's own directory.
 from __future__ import annotations
 
 import copy
+import re
 import zlib
 from pathlib import Path
 
@@ -58,6 +59,12 @@ FIELD_KEYS = {"name", "cube", "mask", "sofia_par", "catalogue", "noise_cube",
               "chan_min", "chan_max", "z", "mask_is_raw",
               "injection", "matching", "substrate", "tools", "extra"}
 FILE_KEYS = ("cube", "mask", "sofia_par", "catalogue", "noise_cube")
+
+
+def field_key(name):
+    """Alphabetical order with numbers compared as numbers (Abell 85 before Abell 168)."""
+    parts = re.split(r"(\d+(?:\.\d+)?)", str(name))
+    return tuple(float(t) if i % 2 else t.lower() for i, t in enumerate(parts))
 
 
 def _merge(base, over):
@@ -292,7 +299,7 @@ TEMPLATE = Path(__file__).with_name("data") / "survey_template.yaml"
 def import_fields(fields_dir, workdir="."):
     """A survey dict built from existing per-field field.yaml files."""
     fields, tools = [], {}
-    for p in sorted(Path(fields_dir).glob("*/field.yaml")):
+    for p in sorted(Path(fields_dir).glob("*/field.yaml"), key=lambda q: field_key(q.parent.name)):
         c = yaml.safe_load(p.read_text()) or {}
         inj = c.get("injection") or {}
         tools = tools or {k: v for k, v in (c.get("tools") or {}).items() if v}
