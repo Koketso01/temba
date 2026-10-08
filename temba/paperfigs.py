@@ -1164,7 +1164,7 @@ def fig_showcase(res, runs, outdir, wanted=None, n=3, worst_by="score"):
     left, right, wsp, hsp = 0.095, 0.925, 0.06, 0.10
     head = 6.0 * FONT_SCALE                       # column titles
     two_rows = W["full"] < 170                    # the legend needs two rows on narrow pages
-    strip = (28.0 + (5.0 if two_rows else 0.0)) * FONT_SCALE   # axis label, colour bars, legend
+    strip = (25.5 + (5.0 if two_rows else 0.0)) * FONT_SCALE   # axis label, colour bars, legend
     hmax = 180.0 if W["full"] < 170 else 205.0    # leave room for the caption on the page
     width = W["full"]
     for _ in range(3):                            # shrink the width if the page is too short
@@ -1191,13 +1191,15 @@ def fig_showcase(res, runs, outdir, wanted=None, n=3, worst_by="score"):
     # colour bars under the columns they describe
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize
-    cols = [gs[last, j].get_position(fig) for j in range(3)]
-    yb, hb = (strip - 15.0 * FONT_SCALE) / H, 2.8 / H     # bars just under the bottom row
-    for x0, x1, cmap, lim, lab in (
-            (cols[0].x0, cols[1].x1, "cividis", (0, 1), "moment 0 / injected peak"),
-            (cols[2].x0, cols[2].x1, "RdBu_r", (-RESID_NSIG, RESID_NSIG),
+    # the pair of colour bars centred under the figure, the moment-0 bar wider
+    yb, hb = (strip - 13.0 * FONT_SCALE) / H, 2.8 / H     # bars just under the bottom row
+    w_mom, w_res, gap = 0.34, 0.20, 0.07
+    x_mom = 0.5 - 0.5 * (w_mom + gap + w_res)
+    for x0, wd, cmap, lim, lab in (
+            (x_mom, w_mom, "cividis", (0, 1), "moment 0 / injected peak"),
+            (x_mom + w_mom + gap, w_res, "RdBu_r", (-RESID_NSIG, RESID_NSIG),
              r"residual / $\sigma_{\rm mom0}$")):
-        cax = fig.add_axes([x0 + 0.03, yb, (x1 - x0) - 0.06, hb])
+        cax = fig.add_axes([x0, yb, wd, hb])
         cb = fig.colorbar(ScalarMappable(Normalize(*lim), cmap=cmap), cax=cax,
                           orientation="horizontal")
         cb.set_ticks([0, 0.5, 1] if lim[0] == 0 else [lim[0], 0, lim[1]])

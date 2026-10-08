@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.11 (2026-10-08)
+
+- fig09: the pair of colour bars is centred under the figure, closer to the
+  panels above.
+
 ## 1.0.10 (2026-10-08)
 
 - fig09 (showcase): two fields on a thesis page and three on a journal page
