@@ -872,7 +872,7 @@ def fig_size(res, outdir):
     ax.set_ylim(0, min(4.0, np.nanpercentile(y, 99.5) * 1.05))
     ax.set_xlabel(r"${\rm SNR}_{\rm int}$")
     ax.set_ylabel(r"SoFiA $3\sigma$ major axis / $\theta_{\rm beam}$")
-    cb = fig.colorbar(sc, ax=ax, pad=0.015, aspect=30)
+    cb = fig.colorbar(sc, ax=ax, pad=0.015, aspect=18)          # thicker bar
     cb.set_label(r"$\log_{10}\,d_{\rm HI}/\theta_{\rm beam}$")
     cb.solids.set_alpha(1)
     ax.legend(loc="upper left")
@@ -955,15 +955,15 @@ def fig_position_maps(rr, outdir, nb=8, min_n=12, vlim=0.2):
                 fontsize=plt.rcParams["legend.fontsize"] - 0.5, color=INK)
         ax.set_aspect("equal")
         ax.minorticks_off()
-    for ax, b_ in zip(axes, below):
-        if b_:
-            ax.set_xlabel(r"$\Delta x$ [arcmin]")
-    for ax, f0 in zip(axes, first):
-        if f0:
-            ax.set_ylabel(r"$\Delta y$ [arcmin]")
+    # one label per axis for the whole grid: with a centred last row, per-panel
+    # labels collided with the tick labels of the row above
+    fig.supxlabel(r"$\Delta x$ [arcmin]", fontsize=plt.rcParams["axes.labelsize"],
+                  x=0.48, y=0.0, va="bottom")
+    fig.supylabel(r"$\Delta y$ [arcmin]", fontsize=plt.rcParams["axes.labelsize"],
+                  x=0.02, ha="left")
     # a colour bar of its own, right of the grid, so it never covers a panel
-    fig.subplots_adjust(left=0.10, right=0.86)
-    cax = fig.add_axes([0.885, 0.18, 0.022, 0.64])
+    fig.subplots_adjust(left=0.09, right=0.845, bottom=0.10)
+    cax = fig.add_axes([0.868, 0.18, 0.032, 0.64])
     cb = fig.colorbar(im, cax=cax)
     cb.set_label(r"$\Delta P_{\rm det}$ = detected $-$ $P_{\rm det}$(SNR)")
     return save(fig, outdir, "fig07_position_maps")
@@ -1058,7 +1058,7 @@ def centred_velocity(d):
 
 def fsz(size):
     """Showcase type: the scaled size, a little smaller on narrow pages."""
-    return pt(size) if W["full"] >= 170 else round(pt(size) * 0.82, 2)
+    return pt(size) if W["full"] >= 170 else round(pt(size) * 0.92, 2)
 
 
 def showcase_panels(fig, gs, row, col0, d, first_row, last_row, vlim):
@@ -1111,9 +1111,7 @@ def showcase_panels(fig, gs, row, col0, d, first_row, last_row, vlim):
         ax.set_xticklabels([])
     else:
         ax.set_xlabel(r"$v-v_{\rm c}$ [km s$^{-1}$]", fontsize=fsz(8.0), labelpad=1.5)
-    ax.text(0.04, 0.96, ("SNR %.1f   $d/\\theta$ %.2f\n$C$ %.2f   $\\mathcal{F}$ %.2f"
-                         if W["full"] >= 170 else
-                         "SNR %.0f, $d/\\theta$ %.1f\n$C$ %.2f, $\\mathcal{F}$ %.2f") % (
+    ax.text(0.03, 0.95, "SNR %.0f, $d/\\theta$ %.1f\n$C$ %.2f, $\\mathcal{F}$ %.2f" % (
         d["snr"], d["dratio"], d["capture"], d["fidelity"]),
             transform=ax.transAxes, va="top", ha="left", fontsize=fsz(7.2), color=INK,
             linespacing=1.25)
@@ -1122,7 +1120,7 @@ def showcase_panels(fig, gs, row, col0, d, first_row, last_row, vlim):
     return ax
 
 
-def fig_showcase(res, runs, outdir, wanted=None, n=6, worst_by="score"):
+def fig_showcase(res, runs, outdir, wanted=None, n=3, worst_by="score"):
     stamps = load_stamps(runs)
     fs = pick_fields(res, stamps, n, wanted)
     if not fs:
@@ -1150,40 +1148,59 @@ def fig_showcase(res, runs, outdir, wanted=None, n=6, worst_by="score"):
             if sp.max() > 0:
                 vlim = max(vlim, np.max(np.abs(dv[sp > 0.01 * sp.max()])))
     vlim = 100.0 * np.ceil(1.1 * vlim / 100.0) if vlim > 0 else 500.0
-    nr = len(rows)
-    sc = W["full"] / 174.0                      # drawn for 174 mm; scales to the page
-    narrow = W["full"] < 170
-    rowh = 26.0 if narrow else 24.0             # mm per row
-    strip = 27.0 * FONT_SCALE                   # spectra labels, colour bars, legend
-    head = 6.0 * FONT_SCALE                     # column titles
-    H = rowh * nr + strip + head
-    fig = plt.figure(figsize=(W["full"] * MM, H * MM))
-    ws = 1.45 if W["full"] >= 170 else 1.65      # wider spectra on narrow pages
-    gs = fig.add_gridspec(nr, 9, width_ratios=[1, 1, 1, ws, 0.24, 1, 1, 1, ws],
-                          hspace=0.10, wspace=0.05,
-                          left=0.04 if narrow else 0.035, right=0.955,
-                          top=1 - head / H, bottom=strip / H)
-    for r, (f, best, worst) in enumerate(rows):
-        showcase_panels(fig, gs, r, 0, best, r == 0, r == nr - 1, vlim)
-        showcase_panels(fig, gs, r, 5, worst, r == 0, r == nr - 1, vlim)
-        ax0 = fig.axes[-8]
-        bb = ax0.get_position()
-        fig.text(0.014, 0.5 * (bb.y0 + bb.y1),
-                 label(f).replace("$-$", "\n$-$") if narrow and f.startswith("J") else label(f),
-                 rotation=90, ha="center", multialignment="center",
-                 va="center", fontsize=fsz(8.5))
-    # one pair of horizontal colourbars, centred, for every row and both halves
+    # Layout: one row per example, the best above the worst for each field, with
+    # four columns (injected, recovered, residual, spectrum) across the page.
+    # This gives every map about twice the area of the side-by-side layout.
+    nf = len(rows)
+    order_ = []                                   # (gridspec row, field, case, record)
+    hr = []
+    for k, (f, best, worst) in enumerate(rows):
+        if k:
+            hr.append(0.22)                       # gap between fields
+        order_.append((len(hr), f, "best", best)); hr.append(1.0)
+        order_.append((len(hr), f, "worst", worst)); hr.append(1.0)
+    ws_ = 2.0                                     # spectrum width, in map widths
+    wr = [1, 1, 1, ws_]
+    left, right, wsp, hsp = 0.095, 0.925, 0.06, 0.10
+    head = 6.0 * FONT_SCALE                       # column titles
+    two_rows = W["full"] < 170                    # the legend needs two rows on narrow pages
+    strip = (28.0 + (5.0 if two_rows else 0.0)) * FONT_SCALE   # axis label, colour bars, legend
+    hmax = 180.0 if W["full"] < 170 else 205.0    # leave room for the caption on the page
+    width = W["full"]
+    for _ in range(3):                            # shrink the width if the page is too short
+        u = width * (right - left) / (sum(wr) + wsp * (len(wr) - 1) * np.mean(wr))
+        grid = u * (sum(hr) + hsp * (len(hr) - 1) * np.mean(hr))
+        H = grid + head + strip
+        if H <= hmax:
+            break
+        width *= (hmax - head - strip) / grid
+    fig = plt.figure(figsize=(width * MM, H * MM))
+    gs = fig.add_gridspec(len(hr), 4, width_ratios=wr, height_ratios=hr, wspace=wsp, hspace=hsp,
+                          left=left, right=right, top=1 - head / H, bottom=strip / H)
+    last = max(r for r, *_ in order_)
+    for r, f, case, d in order_:
+        showcase_panels(fig, gs, r, 0, d, r == 0, r == last, vlim)
+        bb = fig.axes[-4].get_position()
+        fig.text(0.058, 0.5 * (bb.y0 + bb.y1), case, rotation=90, ha="center", va="center",
+                 fontsize=fsz(7.5), style="italic", color=GREY)
+        if case == "best":
+            bw_ = bb
+        else:
+            fig.text(0.022, 0.5 * (bw_.y1 + bb.y0), label(f), rotation=90, ha="center",
+                     va="center", fontsize=fsz(8.5))
+    # colour bars under the columns they describe
     from matplotlib.cm import ScalarMappable
     from matplotlib.colors import Normalize
-    yb, hb = 0.50 * strip / H, 1.8 / H          # below the spectra's axis labels
-    for x0, wd, cmap, lim, lab in (
-            (0.17, 0.30, "cividis", (0, 1), "moment 0 / peak of injected model"),
-            (0.56, 0.24, "RdBu_r", (-RESID_NSIG, RESID_NSIG), r"residual / $\sigma_{\rm mom0}$")):
-        cax = fig.add_axes([x0, yb, wd, hb])
+    cols = [gs[last, j].get_position(fig) for j in range(3)]
+    yb, hb = (strip - 15.0 * FONT_SCALE) / H, 2.8 / H     # bars just under the bottom row
+    for x0, x1, cmap, lim, lab in (
+            (cols[0].x0, cols[1].x1, "cividis", (0, 1), "moment 0 / injected peak"),
+            (cols[2].x0, cols[2].x1, "RdBu_r", (-RESID_NSIG, RESID_NSIG),
+             r"residual / $\sigma_{\rm mom0}$")):
+        cax = fig.add_axes([x0 + 0.03, yb, (x1 - x0) - 0.06, hb])
         cb = fig.colorbar(ScalarMappable(Normalize(*lim), cmap=cmap), cax=cax,
                           orientation="horizontal")
-        cb.set_ticks([0, 0.25, 0.5, 0.75, 1] if lim[0] == 0 else
-                     [lim[0], lim[0] / 2, 0, lim[1] / 2, lim[1]])
+        cb.set_ticks([0, 0.5, 1] if lim[0] == 0 else [lim[0], 0, lim[1]])
         cb.outline.set_linewidth(0.5)
         cb.ax.tick_params(labelsize=fsz(7.5), length=2.5, width=0.5, pad=1.5)
         cb.ax.minorticks_off()
@@ -1195,10 +1212,8 @@ def fig_showcase(res, runs, outdir, wanted=None, n=6, worst_by="score"):
                         Line2D([], [], color=ISO_COLOUR, lw=0.8, label=r"model $3\sigma$ isophote"),
                         Line2D([], [], color=GREY, lw=0, marker="o", mfc="none", ms=4.5,
                                label="beam")],
-               loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=5,
-               fontsize=pt(8) if W["full"] >= 170 else 7,
-               handlelength=2.4 if W["full"] >= 170 else 2.0,
-               columnspacing=1.4 if W["full"] >= 170 else 0.8)
+               loc="lower center", bbox_to_anchor=(0.5, 0.0), ncol=3 if two_rows else 5,
+               fontsize=fsz(7.5), handlelength=2.0, columnspacing=1.0)
     out = Path(outdir); out.mkdir(parents=True, exist_ok=True)
     fig.savefig(out / "fig09_showcase.pdf", bbox_inches=None)
     try:
@@ -1844,7 +1859,9 @@ def main():
         if "fig07" in want: made.append(fig_position_maps(rr, a.outdir))
         if "fig08" in want: made.append(fig_radius_freq(rr, a.outdir))
         if "fig09" in want:
-            out = fig_showcase(res, a.runs, a.outdir, a.showcase_fields, worst_by=a.worst)
+            # a thesis page is shorter than a journal page: two fields keep the maps large
+            out = fig_showcase(res, a.runs, a.outdir, a.showcase_fields, worst_by=a.worst,
+                               n=2 if a.journal == "thesis" else 3)
             if out:
                 made.append(out[0]); rows = out[1]
         if "fig10" in want: made.append(fig_per_field(res, a.outdir))

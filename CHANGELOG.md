@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.10 (2026-10-08)
+
+- fig09 (showcase): two fields on a thesis page and three on a journal page
+  by default (`--showcase-fields` chooses them), the best and worst example of each stacked as rows across the full
+  width, so every map is about twice as large; colour bars sit under the
+  columns they describe.
+- fig07: one shared x and y label for the grid (per-panel labels collided
+  around the centred last row).
+- Thicker colour bars in fig06, fig07 and fig09.
+
 ## 1.0.9 (2026-10-08)
 
 - One field order everywhere (figures, tables, survey summary, examiner
