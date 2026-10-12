@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.13 (2026-10-08)
+
+- `temba.paperfigs --exclude FIELD ...` leaves fields out of every figure and
+  table, e.g. to make a paper's figures for one data release only.
+
 ## 1.0.12 (2026-10-08)
 
 - fig03 (thresholds) is ordered by increasing S50, lowest at the top; every

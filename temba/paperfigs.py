@@ -1814,6 +1814,9 @@ def main():
                          "with newtxtext/newtxmath, the MNRAS template fonts")
     ap.add_argument("--bootstrap", type=int, default=200)
     ap.add_argument("--only", nargs="*", choices=FIGS)
+    ap.add_argument("--exclude", nargs="*", default=[], metavar="FIELD",
+                    help="leave these fields out of every figure and table (e.g. for a paper "
+                         "limited to one data release)")
     ap.add_argument("--showcase-fields", nargs="*",
                     help="the six fields for fig09; default spans the S50 range")
     ap.add_argument("--schematic", choices=("column", "flow", "boxes"), default="column",
@@ -1836,6 +1839,9 @@ def main():
                          boxes=fig_pipeline_boxes)[a.schematic](a.outdir))
     if want - {"fig01"}:
         fields = collect(a.runs)
+        for f in a.exclude:
+            if fields.pop(f, None) is not None:
+                print(f"  {f}: excluded")
         if not fields:
             raise SystemExit(f"No recovery tables under {a.runs}/*/run_*/products/")
         for item in a.min_freq:
